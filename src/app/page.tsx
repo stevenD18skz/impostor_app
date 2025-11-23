@@ -3,22 +3,27 @@
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Play, RotateCcw, Users } from 'lucide-react';
 
+interface Player {
+  isImpostor: boolean;
+  name: string;
+}
+
 export default function ImpostorGame() {
   const [gameState, setGameState] = useState('setup'); // setup, names, reveal, playing, ended
   const [numPlayers, setNumPlayers] = useState(4);
   const [numImpostors, setNumImpostors] = useState(1);
   const [currentPlayer, setCurrentPlayer] = useState(0);
   const [showRole, setShowRole] = useState(false);
-  const [players, setPlayers] = useState([]);
-  const [playerNames, setPlayerNames] = useState([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [playerNames, setPlayerNames] = useState<string[]>([]);
   const [secretWord, setSecretWord] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('comida');
   const [timeLimit, setTimeLimit] = useState(180);
   const [timeLeft, setTimeLeft] = useState(180);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [playingOrder, setPlayingOrder] = useState([]);
+  const [playingOrder, setPlayingOrder] = useState<Player[]>([]);
 
-  const categorias = {
+  const categorias: Record<string, { nombre: string; palabras: string[] }> = {
     comida: {
       nombre: '🍕 Comida',
       palabras: ['Pizza', 'Hamburguesa', 'Sushi', 'Tacos', 'Pasta', 'Helado', 'Café', 'Chocolate', 'Arroz', 'Pollo', 'Ensalada', 'Sopas']
@@ -62,7 +67,7 @@ export default function ImpostorGame() {
   };
 
   useEffect(() => {
-    let interval;
+    let interval: string | number | NodeJS.Timeout | undefined;
     if (isTimerRunning && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft(prev => {
@@ -87,12 +92,12 @@ export default function ImpostorGame() {
   };
 
   const startGame = () => {
-    const palabras = categorias[selectedCategory].palabras;
+    const palabras:string[] = categorias[selectedCategory].palabras;
     const word = palabras[Math.floor(Math.random() * palabras.length)];
     setSecretWord(word);
     
     const playerRoles = Array(numPlayers).fill(false);
-    const impostorIndices = [];
+    const impostorIndices: number[] = [];
     
     while (impostorIndices.length < numImpostors) {
       const idx = Math.floor(Math.random() * numPlayers);
@@ -112,7 +117,7 @@ export default function ImpostorGame() {
     setTimeLeft(timeLimit);
   };
 
-  const updatePlayerName = (index, name) => {
+  const updatePlayerName = (index: number, name: string) => {
     const newNames = [...playerNames];
     newNames[index] = name;
     setPlayerNames(newNames);
@@ -141,7 +146,7 @@ export default function ImpostorGame() {
     setIsTimerRunning(false);
   };
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
