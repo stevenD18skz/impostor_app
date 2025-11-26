@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Play, RotateCcw, Users } from 'lucide-react';
+import { categorias } from "./lib/data.js"
 
 interface Player {
   isImpostor: boolean;
@@ -23,48 +24,7 @@ export default function ImpostorGame() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [playingOrder, setPlayingOrder] = useState<Player[]>([]);
 
-  const categorias: Record<string, { nombre: string; palabras: string[] }> = {
-    comida: {
-      nombre: '🍕 Comida',
-      palabras: ['Pizza', 'Hamburguesa', 'Sushi', 'Tacos', 'Pasta', 'Helado', 'Café', 'Chocolate', 'Arroz', 'Pollo', 'Ensalada', 'Sopas']
-    },
-    animales: {
-      nombre: '🐾 Animales',
-      palabras: ['Perro', 'Gato', 'León', 'Elefante', 'Delfín', 'Águila', 'Serpiente', 'Tigre', 'Panda', 'Jirafa', 'Pingüino', 'Conejo']
-    },
-    famosos: {
-      nombre: '⭐ Personas Famosas',
-      palabras: ['Messi', 'Shakira', 'Bad Bunny', 'Cristiano Ronaldo', 'Beyoncé', 'Einstein', 'Michael Jackson', 'Madonna', 'Maluma', 'J Balvin']
-    },
-    lugares: {
-      nombre: '🌍 Lugares',
-      palabras: ['París', 'Playa', 'Montaña', 'Desierto', 'Bosque', 'Ciudad', 'Campo', 'Isla', 'Río', 'Volcán', 'Cascada', 'Lago']
-    },
-    objetos: {
-      nombre: '📱 Objetos',
-      palabras: ['Teléfono', 'Computadora', 'Reloj', 'Guitarra', 'Libro', 'Paraguas', 'Zapatos', 'Cámara', 'Micrófono', 'Lentes', 'Mochila']
-    },
-    deportes: {
-      nombre: '⚽ Deportes',
-      palabras: ['Fútbol', 'Baloncesto', 'Tenis', 'Natación', 'Ciclismo', 'Boxeo', 'Golf', 'Béisbol', 'Volleyball', 'Atletismo']
-    },
-    futbolistas: {
-      nombre: '⚽ Futbolistas',
-      palabras: ['Messi', 'Cristiano Ronaldo', 'Neymar', 'Mbappé', 'Haaland', 'Pelé', 'Maradona', 'Ronaldinho', 'Zidane', 'Lewandowski', 'Benzema', 'Salah']
-    },
-    anime: {
-      nombre: '🎌 Anime',
-      palabras: ['Naruto', 'Goku', 'Luffy', 'Ichigo', 'Saitama', 'Sailor Moon', 'Pikachu', 'Light Yagami', 'Edward Elric', 'Eren Yeager', 'Tanjiro', 'Gojo']
-    },
-    peliculas: {
-      nombre: '🎬 Películas',
-      palabras: ['Titanic', 'Avatar', 'Matrix', 'Inception', 'Avengers', 'Toy Story', 'Jurassic Park', 'Star Wars', 'Harry Potter', 'El Padrino', 'Coco', 'Frozen']
-    },
-    videojuegos: {
-      nombre: '🎮 Videojuegos',
-      palabras: ['Minecraft', 'Fortnite', 'Mario', 'Zelda', 'Pokemon', 'GTA', 'FIFA', 'Call of Duty', 'League of Legends', 'Valorant', 'Roblox', 'Among Us']
-    }
-  };
+ 
 
   useEffect(() => {
     let interval: string | number | NodeJS.Timeout | undefined;
@@ -92,7 +52,7 @@ export default function ImpostorGame() {
   };
 
   const startGame = () => {
-    const palabras:string[] = categorias[selectedCategory].palabras;
+    const palabras:string[] = categorias[selectedCategory as keyof typeof categorias].palabras;
     const word = palabras[Math.floor(Math.random() * palabras.length)];
     setSecretWord(word);
     
@@ -175,7 +135,7 @@ export default function ImpostorGame() {
                 >
                   {Object.keys(categorias).map(key => (
                     <option key={key} value={key} className="bg-gray-800">
-                      {categorias[key].nombre}
+                      {categorias[key as keyof typeof categorias].nombre}
                     </option>
                   ))}
                 </select>
@@ -417,6 +377,10 @@ export default function ImpostorGame() {
             <div className="bg-white/10 rounded-2xl p-8 space-y-4">
               <p className="text-white text-2xl mb-4">La palabra secreta era:</p>
               <p className="text-yellow-300 text-5xl font-bold">{secretWord}</p>
+
+              <p className="text-white text-2xl mt-8 mb-4">El impostor era:</p>
+              <p className="text-red-400 text-5xl font-bold">{players.find(p => p.isImpostor)?.name}</p>
+                
               
               <div className="mt-6 pt-6 border-t border-white/20">
                 <p className="text-purple-200 text-lg">
