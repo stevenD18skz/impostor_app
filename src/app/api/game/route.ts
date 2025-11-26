@@ -40,7 +40,8 @@ export async function POST(request: Request) {
         timeLeft: 180,
         playingOrder: [],
         currentPlayerIndex: 0,
-        startTime: null
+        startTime: null,
+        readyPlayers: []
       },
       lastUpdated: Date.now()
     };
@@ -106,15 +107,34 @@ export async function POST(request: Request) {
         timeLeft: timeLimit,
         playingOrder: shuffledPlayers,
         currentPlayerIndex: 0,
-        startTime: Date.now()
+        startTime: null, // Will be set when all players confirm
+        readyPlayers: []
     };
-    room.gameState = 'playing'; // Or 'reveal' if you want to keep that step, but for multiplayer 'playing' might be immediate or individual reveal
+    room.gameState = 'reveal'; // Start in reveal state
     // Let's stick to the flow: Setup -> Lobby -> Reveal (Individual) -> Playing
     // Actually, for multiplayer, 'Reveal' is usually a local state. The server game state can be 'playing', but clients show reveal first.
     // Or we can have a 'reveal' state in server. Let's say 'playing' implies game started.
     
     room.lastUpdated = Date.now();
     return NextResponse.json({ room });
+  }
+
+  if (action === 'confirmRole') {
+      if (!rooms[roomCode]) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+      
+      const room = rooms[roomCode];
+      if (!room.gameData.readyPlayers.includes(playerName)) {
+          room.gameData.readyPlayers.push(playerName);
+      }
+      
+      // Check if all players are ready
+      if (room.gameData.readyPlayers.length === room.players.length) {
+          room.gameState = 'playing';
+          room.gameData.startTime = Date.now();
+      }
+      
+      room.lastUpdated = Date.now();
+      return NextResponse.json({ room });
   }
   
   if (action === 'updateGame') {

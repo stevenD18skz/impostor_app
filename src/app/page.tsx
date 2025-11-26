@@ -57,6 +57,14 @@ export default function ImpostorGame() {
     });
   };
 
+  const confirmRole = async () => {
+    await fetch('/api/game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'confirmRole', roomCode, playerName })
+    });
+  };
+
   const endGame = async () => {
     await fetch('/api/game', {
       method: 'POST',
@@ -106,15 +114,43 @@ export default function ImpostorGame() {
           />
         )}
 
+        {room.gameState === 'reveal' && (
+          (() => {
+            const isReady = room.gameData.readyPlayers?.includes(playerName);
+            if (isReady) {
+              return (
+                <div className="text-center space-y-8">
+                  <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 animate-pulse">
+                    <h2 className="text-3xl font-bold text-white mb-4">
+                      ⏳ Esperando a los demás...
+                    </h2>
+                    <p className="text-white/80 text-lg">
+                      El juego comenzará cuando todos hayan visto su rol.
+                    </p>
+                    <div className="mt-6 flex justify-center">
+                      <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </div>
+                    <p className="mt-4 text-white/60">
+                      Jugadores listos: {room.gameData.readyPlayers.length}/{room.players.length}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <RoleReveal 
+                player={myPlayer} 
+                secretWord={room.gameData.secretWord} 
+                onReady={confirmRole} 
+              />
+            );
+          })()
+        )}
+
         {room.gameState === 'playing' && (
-           // We can handle the "Reveal" phase locally or as a sub-state
-           // For simplicity, let's say if we haven't seen our role, show reveal
-           // But since we don't have local state for "seen role" yet, let's add it or assume 'playing' starts with reveal
-           // Actually, let's use a local state for "ready"
-           <GameController 
+           <GameRunning 
              room={room} 
              isHost={isHost} 
-             myPlayer={myPlayer} 
              onEndGame={endGame} 
            />
         )}
@@ -125,28 +161,5 @@ export default function ImpostorGame() {
 
       </div>
     </div>
-  );
-}
-
-// Sub-component to handle local reveal state
-function GameController({ room, isHost, myPlayer, onEndGame }: any) {
-  const [hasRevealed, setHasRevealed] = useState(false);
-
-  if (!hasRevealed) {
-    return (
-      <RoleReveal 
-        player={myPlayer} 
-        secretWord={room.gameData.secretWord} 
-        onReady={() => setHasRevealed(true)} 
-      />
-    );
-  }
-
-  return (
-    <GameRunning 
-      room={room} 
-      isHost={isHost} 
-      onEndGame={onEndGame} 
-    />
   );
 }
