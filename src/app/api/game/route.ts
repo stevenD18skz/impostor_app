@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     
     // Assign roles
     const playerIndices = Array.from({ length: room.players.length }, (_, i) => i);
-    const impostorIndices = [];
+    const impostorIndices: number[] = [];
     while (impostorIndices.length < numImpostors) {
         const idx = Math.floor(Math.random() * playerIndices.length);
         if (!impostorIndices.includes(idx)) {
