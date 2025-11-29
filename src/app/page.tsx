@@ -6,15 +6,17 @@ import Lobby from '@/components/Lobby';
 import RoleReveal from '@/components/RoleReveal';
 import GameRunning from '@/components/GameRunning';
 import GameEnd from '@/components/GameEnd';
+import LocalGame from '@/components/LocalGame';
 
 export default function ImpostorGame() {
+  const [mode, setMode] = useState<'menu' | 'local' | 'multiplayer'>('menu');
   const [room, setRoom] = useState<any>(null);
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
 
   // Polling logic
   useEffect(() => {
-    if (!roomCode) return;
+    if (!roomCode || mode !== 'multiplayer') return;
 
     const interval = setInterval(async () => {
       try {
@@ -32,12 +34,13 @@ export default function ImpostorGame() {
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);
-  }, [roomCode]);
+  }, [roomCode, mode]);
 
   const handleJoin = (code: string, name: string, roomData: any) => {
     setRoomCode(code);
     setPlayerName(name);
     setRoom(roomData);
+    setMode('multiplayer');
   };
 
   const updateSettings = async (settings: any) => {
@@ -46,7 +49,6 @@ export default function ImpostorGame() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'updateSettings', roomCode, settings })
     });
-    // Optimistic update or wait for poll
   };
 
   const startGame = async () => {
@@ -54,14 +56,6 @@ export default function ImpostorGame() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'startGame', roomCode })
-    });
-  };
-
-  const confirmRole = async () => {
-    await fetch('/api/game', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'confirmRole', roomCode, playerName })
     });
   };
 
@@ -77,13 +71,24 @@ export default function ImpostorGame() {
     setRoom(null);
     setRoomCode('');
     setPlayerName('');
+    setMode('menu');
   };
 
-  if (!room) {
+  if (mode === 'local') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-          <GameSetup onJoin={handleJoin} />
+          <LocalGame onBack={() => setMode('menu')} />
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'menu' || !room) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
+          <GameSetup onJoin={handleJoin} onLocalPlay={() => setMode('local')} />
         </div>
       </div>
     );
@@ -114,43 +119,11 @@ export default function ImpostorGame() {
           />
         )}
 
-        {room.gameState === 'reveal' && (
-          (() => {
-            const isReady = room.gameData.readyPlayers?.includes(playerName);
-            if (isReady) {
-              return (
-                <div className="text-center space-y-8">
-                  <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 animate-pulse">
-                    <h2 className="text-3xl font-bold text-white mb-4">
-                      ⏳ Esperando a los demás...
-                    </h2>
-                    <p className="text-white/80 text-lg">
-                      El juego comenzará cuando todos hayan visto su rol.
-                    </p>
-                    <div className="mt-6 flex justify-center">
-                      <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    </div>
-                    <p className="mt-4 text-white/60">
-                      Jugadores listos: {room.gameData.readyPlayers.length}/{room.players.length}
-                    </p>
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <RoleReveal 
-                player={myPlayer} 
-                secretWord={room.gameData.secretWord} 
-                onReady={confirmRole} 
-              />
-            );
-          })()
-        )}
-
         {room.gameState === 'playing' && (
-           <GameRunning 
+           <GameController 
              room={room} 
              isHost={isHost} 
+             myPlayer={myPlayer} 
              onEndGame={endGame} 
            />
         )}
@@ -161,5 +134,28 @@ export default function ImpostorGame() {
 
       </div>
     </div>
+  );
+}
+
+// Sub-component to handle local reveal state
+function GameController({ room, isHost, myPlayer, onEndGame }: any) {
+  const [hasRevealed, setHasRevealed] = useState(false);
+
+  if (!hasRevealed) {
+    return (
+      <RoleReveal 
+        player={myPlayer} 
+        secretWord={room.gameData.secretWord} 
+        onReady={() => setHasRevealed(true)} 
+      />
+    );
+  }
+
+  return (
+    <GameRunning 
+      room={room} 
+      isHost={isHost} 
+      onEndGame={onEndGame} 
+    />
   );
 }
