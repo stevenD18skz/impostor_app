@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { categorias } from '@/app/lib/data';
-
-// In-memory storage for rooms
-// In a real app, use Redis or a database
-let rooms: Record<string, any> = {};
+import { supabase } from '@/lib/supabase';
 
 // Helper to generate room code
 const generateRoomCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -12,11 +9,38 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
 
-  if (!code || !rooms[code]) {
+  if (!code) {
+    return NextResponse.json({ error: 'Room code is required' }, { status: 400 });
+  }
+
+  // Obtener la sala de Supabase
+  const { data: room, error: roomError } = await supabase
+    .from('rooms')
+    .select('*')
+    .eq('code', code)
+    .single();
+
+  if (roomError || !room) {
     return NextResponse.json({ error: 'Room not found' }, { status: 404 });
   }
 
-  return NextResponse.json(rooms[code]);
+  // Obtener los jugadores de la sala
+  const { data: players, error: playersError } = await supabase
+    .from('players')
+    .select('*')
+    .eq('room_id', room.id);
+
+  if (playersError) {
+    return NextResponse.json({ error: 'Error fetching players' }, { status: 500 });
+  }
+
+  // Combinar la información
+  const roomData = {
+    ...room,
+    players: players || []
+  };
+
+  return NextResponse.json(roomData);
 }
 
 export async function POST(request: Request) {
@@ -25,133 +49,359 @@ export async function POST(request: Request) {
 
   if (action === 'create') {
     const newRoomCode = generateRoomCode();
-    rooms[newRoomCode] = {
-      code: newRoomCode,
-      host: playerName,
-      players: [{ name: playerName, isHost: true, isImpostor: false }],
-      gameState: 'setup', // setup, lobby, playing, ended
-      settings: settings || {
-        numImpostors: 1,
-        timeLimit: 180,
-        category: 'comida'
-      },
-      gameData: {
-        secretWord: '',
-        timeLeft: 180,
-        playingOrder: [],
-        currentPlayerIndex: 0,
-        startTime: null,
-        readyPlayers: []
-      },
-      lastUpdated: Date.now()
-    };
-    return NextResponse.json({ roomCode: newRoomCode, room: rooms[newRoomCode] });
+    
+    // Crear la sala en Supabase
+    const { data: newRoom, error: roomError } = await supabase
+      .from('rooms')
+      .insert({
+        code: newRoomCode,
+        host: playerName,
+        game_state: 'setup',
+        settings: settings || {
+          numImpostors: 1,
+          timeLimit: 180,
+          category: 'comida'
+        },
+        game_data: {
+          secretWord: '',
+          timeLeft: 180,
+          playingOrder: [],
+          currentPlayerIndex: 0,
+          startTime: null,
+          readyPlayers: []
+        }
+      })
+      .select()
+      .single();
+
+    if (roomError || !newRoom) {
+      return NextResponse.json({ error: 'Error creating room' }, { status: 500 });
+    }
+
+    // Crear el jugador anfitrión
+    const { error: playerError } = await supabase
+      .from('players')
+      .insert({
+        room_id: newRoom.id,
+        name: playerName,
+        is_host: true,
+        is_impostor: false
+      });
+
+    if (playerError) {
+      return NextResponse.json({ error: 'Error creating player' }, { status: 500 });
+    }
+
+    // Obtener los jugadores
+    const { data: players } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', newRoom.id);
+
+    return NextResponse.json({ 
+      roomCode: newRoomCode, 
+      room: { ...newRoom, players: players || [] }
+    });
   }
 
   if (action === 'join') {
-    if (!rooms[roomCode]) {
+    // Buscar la sala
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
-    if (rooms[roomCode].gameState !== 'setup' && rooms[roomCode].gameState !== 'lobby') {
-       return NextResponse.json({ error: 'Game already started' }, { status: 400 });
-    }
-    
-    // Check if name exists
-    if (rooms[roomCode].players.some((p: any) => p.name === playerName)) {
-        return NextResponse.json({ error: 'Name already taken' }, { status: 400 });
+
+    if (room.game_state !== 'setup' && room.game_state !== 'lobby') {
+      return NextResponse.json({ error: 'Game already started' }, { status: 400 });
     }
 
-    rooms[roomCode].players.push({ name: playerName, isHost: false, isImpostor: false });
-    rooms[roomCode].lastUpdated = Date.now();
-    return NextResponse.json({ room: rooms[roomCode] });
+    // Verificar si el nombre ya existe
+    const { data: existingPlayer } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id)
+      .eq('name', playerName)
+      .single();
+
+    if (existingPlayer) {
+      return NextResponse.json({ error: 'Name already taken' }, { status: 400 });
+    }
+
+    // Agregar el jugador
+    const { error: playerError } = await supabase
+      .from('players')
+      .insert({
+        room_id: room.id,
+        name: playerName,
+        is_host: false,
+        is_impostor: false
+      });
+
+    if (playerError) {
+      return NextResponse.json({ error: 'Error joining room' }, { status: 500 });
+    }
+
+    // Obtener todos los jugadores actualizados
+    const { data: players } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    return NextResponse.json({ room: { ...room, players: players || [] } });
   }
 
   if (action === 'updateSettings') {
-      if (!rooms[roomCode]) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-      rooms[roomCode].settings = { ...rooms[roomCode].settings, ...settings };
-      rooms[roomCode].lastUpdated = Date.now();
-      return NextResponse.json({ room: rooms[roomCode] });
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    // Actualizar configuración
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({
+        settings: { ...room.settings, ...settings }
+      })
+      .eq('id', room.id);
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Error updating settings' }, { status: 500 });
+    }
+
+    // Obtener sala actualizada con jugadores
+    const { data: updatedRoom } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', room.id)
+      .single();
+
+    const { data: players } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
   }
 
   if (action === 'startGame') {
-    if (!rooms[roomCode]) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-    
-    const room = rooms[roomCode];
-    const { category, numImpostors, timeLimit } = room.settings;
-    
-    // Select word
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    const { data: players, error: playersError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    if (playersError || !players) {
+      return NextResponse.json({ error: 'Error fetching players' }, { status: 500 });
+    }
+
+    const { category, numImpostors, timeLimit } = room.settings as any;
+
+    // Seleccionar palabra
     // @ts-ignore
     const palabras = categorias[category].palabras;
     const word = palabras[Math.floor(Math.random() * palabras.length)];
-    
-    // Assign roles
-    const playerIndices = Array.from({ length: room.players.length }, (_, i) => i);
+
+    // Asignar roles
+    const playerIndices = Array.from({ length: players.length }, (_, i) => i);
     const impostorIndices: number[] = [];
     while (impostorIndices.length < numImpostors) {
-        const idx = Math.floor(Math.random() * playerIndices.length);
-        if (!impostorIndices.includes(idx)) {
-            impostorIndices.push(idx);
-        }
+      const idx = Math.floor(Math.random() * playerIndices.length);
+      if (!impostorIndices.includes(idx)) {
+        impostorIndices.push(idx);
+      }
     }
-    
-    room.players = room.players.map((p: any, i: number) => ({
-        ...p,
-        isImpostor: impostorIndices.includes(i)
-    }));
 
-    // Shuffle playing order
-    const shuffledPlayers = [...room.players].sort(() => Math.random() - 0.5);
+    // Actualizar jugadores con roles
+    for (let i = 0; i < players.length; i++) {
+      await supabase
+        .from('players')
+        .update({ is_impostor: impostorIndices.includes(i) })
+        .eq('id', players[i].id);
+    }
 
-    room.gameData = {
-        secretWord: word,
-        timeLeft: timeLimit,
-        playingOrder: shuffledPlayers,
-        currentPlayerIndex: 0,
-        startTime: null, // Will be set when all players confirm
-        readyPlayers: []
-    };
-    room.gameState = 'reveal'; // Start in reveal state
-    // Let's stick to the flow: Setup -> Lobby -> Reveal (Individual) -> Playing
-    // Actually, for multiplayer, 'Reveal' is usually a local state. The server game state can be 'playing', but clients show reveal first.
-    // Or we can have a 'reveal' state in server. Let's say 'playing' implies game started.
-    
-    room.lastUpdated = Date.now();
-    return NextResponse.json({ room });
+    // Obtener jugadores actualizados
+    const { data: updatedPlayers } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    // Mezclar orden de juego
+    const shuffledPlayers = [...(updatedPlayers || [])].sort(() => Math.random() - 0.5);
+
+    // Actualizar sala con datos del juego
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({
+        game_state: 'reveal',
+        game_data: {
+          secretWord: word,
+          timeLeft: timeLimit,
+          playingOrder: shuffledPlayers,
+          currentPlayerIndex: 0,
+          startTime: null,
+          readyPlayers: []
+        }
+      })
+      .eq('id', room.id);
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Error starting game' }, { status: 500 });
+    }
+
+    // Obtener sala actualizada
+    const { data: finalRoom } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', room.id)
+      .single();
+
+    return NextResponse.json({ room: { ...finalRoom, players: updatedPlayers || [] } });
   }
 
   if (action === 'confirmRole') {
-      if (!rooms[roomCode]) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-      
-      const room = rooms[roomCode];
-      if (!room.gameData.readyPlayers.includes(playerName)) {
-          room.gameData.readyPlayers.push(playerName);
-      }
-      
-      // Check if all players are ready
-      if (room.gameData.readyPlayers.length === room.players.length) {
-          room.gameState = 'playing';
-          room.gameData.startTime = Date.now();
-      }
-      
-      room.lastUpdated = Date.now();
-      return NextResponse.json({ room });
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    const gameData = room.game_data as any;
+    const readyPlayers = gameData.readyPlayers || [];
+
+    if (!readyPlayers.includes(playerName)) {
+      readyPlayers.push(playerName);
+    }
+
+    // Obtener jugadores para verificar si todos están listos
+    const { data: players } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    const allReady = readyPlayers.length === (players?.length || 0);
+
+    // Actualizar sala
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({
+        game_state: allReady ? 'playing' : room.game_state,
+        game_data: {
+          ...gameData,
+          readyPlayers,
+          startTime: allReady ? Date.now() : gameData.startTime
+        }
+      })
+      .eq('id', room.id);
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Error confirming role' }, { status: 500 });
+    }
+
+    // Obtener sala actualizada
+    const { data: updatedRoom } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', room.id)
+      .single();
+
+    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
   }
-  
+
   if (action === 'updateGame') {
-      // For syncing timer, next turn, etc.
-      if (!rooms[roomCode]) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-      if (gameData) {
-          rooms[roomCode].gameData = { ...rooms[roomCode].gameData, ...gameData };
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    if (gameData) {
+      const { error: updateError } = await supabase
+        .from('rooms')
+        .update({
+          game_data: { ...(room.game_data as any), ...gameData }
+        })
+        .eq('id', room.id);
+
+      if (updateError) {
+        return NextResponse.json({ error: 'Error updating game' }, { status: 500 });
       }
-      rooms[roomCode].lastUpdated = Date.now();
-      return NextResponse.json({ room: rooms[roomCode] });
+    }
+
+    // Obtener sala actualizada
+    const { data: updatedRoom } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', room.id)
+      .single();
+
+    const { data: players } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
   }
 
   if (action === 'endGame') {
-      if (!rooms[roomCode]) return NextResponse.json({ error: 'Room not found' }, { status: 404 });
-      rooms[roomCode].gameState = 'ended';
-      rooms[roomCode].lastUpdated = Date.now();
-      return NextResponse.json({ room: rooms[roomCode] });
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({ game_state: 'ended' })
+      .eq('id', room.id);
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Error ending game' }, { status: 500 });
+    }
+
+    // Obtener sala actualizada
+    const { data: updatedRoom } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', room.id)
+      .single();
+
+    const { data: players } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
