@@ -5,6 +5,19 @@ import { supabase } from '@/lib/supabase';
 // Helper to generate room code
 const generateRoomCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
+// Helper to map Supabase room data to frontend format
+const mapRoomData = (room: any, players: any[]) => ({
+  ...room,
+  gameState: room.game_state,
+  gameData: room.game_data,
+  lastUpdated: room.last_updated,
+  players: (players || []).map(p => ({
+    ...p,
+    isHost: p.is_host,
+    isImpostor: p.is_impostor
+  }))
+});
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
@@ -34,13 +47,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Error fetching players' }, { status: 500 });
   }
 
-  // Combinar la información
-  const roomData = {
-    ...room,
-    players: players || []
-  };
-
-  return NextResponse.json(roomData);
+  return NextResponse.json(mapRoomData(room, players));
 }
 
 export async function POST(request: Request) {
@@ -100,11 +107,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       roomCode: newRoomCode, 
-      room: { ...newRoom, players: players || [] }
+      room: mapRoomData(newRoom, players || [])
     });
   }
 
   if (action === 'join') {
+    console.log(`[JOIN] Attempting to join room: ${roomCode} as ${playerName}`);
     // Buscar la sala
     const { data: room, error: roomError } = await supabase
       .from('rooms')
@@ -113,10 +121,12 @@ export async function POST(request: Request) {
       .single();
 
     if (roomError || !room) {
+      console.log(`[JOIN] Room not found or error:`, roomError);
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
     if (room.game_state !== 'setup' && room.game_state !== 'lobby') {
+      console.log(`[JOIN] Game already started: ${room.game_state}`);
       return NextResponse.json({ error: 'Game already started' }, { status: 400 });
     }
 
@@ -129,6 +139,7 @@ export async function POST(request: Request) {
       .single();
 
     if (existingPlayer) {
+      console.log(`[JOIN] Name already taken: ${playerName}`);
       return NextResponse.json({ error: 'Name already taken' }, { status: 400 });
     }
 
@@ -143,6 +154,7 @@ export async function POST(request: Request) {
       });
 
     if (playerError) {
+      console.log(`[JOIN] Error creating player:`, playerError);
       return NextResponse.json({ error: 'Error joining room' }, { status: 500 });
     }
 
@@ -152,7 +164,7 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', room.id);
 
-    return NextResponse.json({ room: { ...room, players: players || [] } });
+    return NextResponse.json({ room: mapRoomData(room, players || []) });
   }
 
   if (action === 'updateSettings') {
@@ -190,7 +202,7 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', room.id);
 
-    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
+    return NextResponse.json({ room: mapRoomData(updatedRoom, players || []) });
   }
 
   if (action === 'startGame') {
@@ -274,7 +286,7 @@ export async function POST(request: Request) {
       .eq('id', room.id)
       .single();
 
-    return NextResponse.json({ room: { ...finalRoom, players: updatedPlayers || [] } });
+    return NextResponse.json({ room: mapRoomData(finalRoom, updatedPlayers || []) });
   }
 
   if (action === 'confirmRole') {
@@ -327,7 +339,7 @@ export async function POST(request: Request) {
       .eq('id', room.id)
       .single();
 
-    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
+    return NextResponse.json({ room: mapRoomData(updatedRoom, players || []) });
   }
 
   if (action === 'updateGame') {
@@ -366,7 +378,7 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', room.id);
 
-    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
+    return NextResponse.json({ room: mapRoomData(updatedRoom, players || []) });
   }
 
   if (action === 'endGame') {
@@ -401,7 +413,7 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', room.id);
 
-    return NextResponse.json({ room: { ...updatedRoom, players: players || [] } });
+    return NextResponse.json({ room: mapRoomData(updatedRoom, players || []) });
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
