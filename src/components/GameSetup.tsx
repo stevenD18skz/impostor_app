@@ -119,6 +119,7 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
         )}
 
         <div className="pt-4 border-t border-white/10">
+          <p className="text-white mb-4 font-semibold">O Jugar Local</p>
           <button
             onClick={onLocalPlay}
             className="w-full bg-gray-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-gray-700 transition-all shadow-lg"
