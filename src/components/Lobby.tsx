@@ -18,9 +18,14 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame }: L
 
   return (
     <div className="text-center space-y-8">
-      <div>
-        <h2 className="text-4xl font-bold text-white mb-2">🏠 Sala: {room.code}</h2>
-        <p className="text-purple-200">Esperando jugadores...</p>
+      <div className="flex flex-col items-center justify-center gap-4">
+        <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" onClick={() => {}}>
+          Salir de la sala
+        </button>
+        <div className="flex flex-col items-center justify-center">
+          <h2 className="text-4xl font-bold text-white mb-2">🏠 Sala: {room.code}</h2>
+          <p className="text-purple-200">Esperando jugadores...</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -116,7 +121,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame }: L
         <button
           onClick={onStartGame}
           disabled={room.players.length < 3}
-          className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:transform-none"
+          className="w-full bg-emerald-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:transform-none"
         >
           <Play className="inline mr-2 mb-1" size={24} />
           Iniciar Partida

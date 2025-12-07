@@ -34,7 +34,7 @@ export default function GameRunning({ room, isHost, onEndGame }: GameRunningProp
       <h2 className="text-4xl font-bold text-white">🎮 ¡Juego en Curso!</h2>
       <h3 className="text-2xl font-bold text-white">Categoría: {room.settings.category}</h3>
       
-      <div className="bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-blue-400 rounded-3xl p-12">
+      <div className="bg-linear-gradient-to-br from-indigo-200/30 via-blue-200/30 to-indigo-200/30 border-2 border-blue-400 rounded-3xl p-12">
         <p className="text-white text-lg mb-4">Tiempo Restante</p>
         <p className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
           {formatTime(timeLeft)}
@@ -60,7 +60,7 @@ export default function GameRunning({ room, isHost, onEndGame }: GameRunningProp
         <div className="flex gap-4">
           <button
             onClick={onEndGame}
-            className="w-full bg-blue-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all"
+            className="w-full bg-linear-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all"
           >
             🏁 Terminar Partida
           </button>

@@ -86,7 +86,7 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
           <button
             onClick={createRoom}
             disabled={isJoining}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg disabled:opacity-50"
+            className="w-full bg-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg disabled:opacity-50"
           >
             {isJoining ? 'Creando...' : '✨ Crear Sala'}
           </button>

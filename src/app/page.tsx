@@ -76,7 +76,7 @@ export default function ImpostorGame() {
 
   if (mode === 'local') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
           <LocalGame onBack={() => setMode('menu')} />
         </div>
@@ -86,7 +86,7 @@ export default function ImpostorGame() {
 
   if (mode === 'menu' || !room) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
           <GameSetup onJoin={handleJoin} onLocalPlay={() => setMode('local')} />
         </div>
@@ -98,7 +98,7 @@ export default function ImpostorGame() {
   const myPlayer = room.players.find((p: any) => p.name === playerName);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
         
         {room.gameState === 'setup' && (

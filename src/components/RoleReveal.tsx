@@ -12,7 +12,7 @@ export default function RoleReveal({ player, secretWord, onReady }: RoleRevealPr
 
   return (
     <div className="text-center space-y-8">
-      <div className="bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-2xl p-6 border-2 border-purple-400">
+      <div className="bg-indigo-500/30 rounded-2xl p-6 border-2 border-purple-400">
         <h2 className="text-3xl font-bold text-white">
           🃏 Tu Carta
         </h2>
@@ -28,7 +28,7 @@ export default function RoleReveal({ player, secretWord, onReady }: RoleRevealPr
 
           <button
             onClick={() => setIsRevealed(true)}
-            className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all shadow-lg"
+            className="bg-cyan-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all shadow-lg"
           >
             <Eye className="inline mr-2 mb-1" size={24} />
             Ver Mi Rol
@@ -36,7 +36,7 @@ export default function RoleReveal({ player, secretWord, onReady }: RoleRevealPr
         </div>
       ) : (
         <div className="space-y-6">
-          <div className={`rounded-2xl p-8 border-4 ${player.isImpostor ? 'bg-gradient-to-br from-red-900/40 to-red-600/40 border-red-400' : 'bg-gradient-to-br from-green-900/40 to-green-600/40 border-green-400'}`}>
+          <div className={`rounded-2xl p-8 border-4 ${player.isImpostor ? 'bg-red-900/40 border-red-400' : 'bg-green-900/40 border-green-400'}`}>
             <h3 className="text-2xl font-bold text-white mb-4">
               {player.isImpostor ? '🎭 ERES EL IMPOSTOR' : '✅ ERES INOCENTE'}
             </h3>
@@ -59,7 +59,7 @@ export default function RoleReveal({ player, secretWord, onReady }: RoleRevealPr
 
           <button
             onClick={onReady}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
+            className="w-full bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
           >
             🎮 Entendido, ir al juego
           </button>

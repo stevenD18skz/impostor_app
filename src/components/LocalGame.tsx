@@ -197,7 +197,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
                 </button>
                 <button
                 onClick={goToNames}
-                className="flex-[2] bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
+                className="flex-1 bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
                 >
                 <Play className="inline mr-2 mb-1" size={24} />
                 Continuar
@@ -239,7 +239,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
               </button>
               <button
                 onClick={startGame}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all"
+                className="flex-1 bg-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all"
               >
                 Iniciar Juego →
               </button>
@@ -249,7 +249,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
 
         {gameState === 'reveal' && (
           <div className="text-center space-y-8">
-            <div className="bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-2xl p-6 border-2 border-purple-400">
+            <div className="bg-pink-500/30 rounded-2xl p-6 border-2 border-purple-400">
               <h2 className="text-3xl font-bold text-white">
                 🃏 Carta de {players[currentPlayer].name}
               </h2>
@@ -268,7 +268,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
 
                 <button
                   onClick={() => setShowRole(true)}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all shadow-lg"
+                  className="bg-linear-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-blue-600 hover:to-cyan-600 transform hover:scale-105 transition-all shadow-lg"
                 >
                   <Eye className="inline mr-2 mb-1" size={24} />
                   Ver Mi Rol
@@ -276,7 +276,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className={`rounded-2xl p-8 border-4 ${players[currentPlayer].isImpostor ? 'bg-gradient-to-br from-red-900/40 to-red-600/40 border-red-400' : 'bg-gradient-to-br from-green-900/40 to-green-600/40 border-green-400'}`}>
+                <div className={`rounded-2xl p-8 border-4 ${players[currentPlayer].isImpostor ? 'bg-linear-gradient-to-br from-red-900/40 to-red-600/40 border-red-400' : 'bg-linear-gradient-to-br from-green-900/40 to-green-600/40 border-green-400'}`}>
                   <div className="bg-white/10 backdrop-blur rounded-xl p-4 mb-6">
                     <h3 className="text-3xl font-bold text-white">
                       🃏 {players[currentPlayer].name}
@@ -305,7 +305,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
 
                 <button
                   onClick={nextPlayer}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
+                  className="w-full bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
                 >
                   {currentPlayer < numPlayers - 1 ? '➡️ Siguiente Jugador' : '🎮 Comenzar Juego'}
                 </button>
@@ -319,7 +319,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
             <h2 className="text-4xl font-bold text-white">🎮 ¡Juego en Curso!</h2>
             <h3 className="text-4xl font-bold text-white">🧪 La categoria es {selectedCategory} 🧪</h3>
             
-            <div className="bg-gradient-to-br from-blue-500/30 to-purple-500/30 border-2 border-blue-400 rounded-3xl p-12">
+            <div className="bg-indigo-500/30 border-2 border-blue-400 rounded-3xl p-12">
               <p className="text-white text-lg mb-4">Tiempo Restante</p>
               <p className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
                 {formatTime(timeLeft)}
@@ -368,7 +368,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
 
             <button
               onClick={resetGame}
-              className="w-full bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold py-3 px-6 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all"
+              className="w-full bg-gray-700 text-white font-bold py-3 px-6 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all"
             >
               <RotateCcw className="inline mr-2 mb-1" size={20} />
               Nueva Partida
@@ -397,7 +397,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
 
             <button
               onClick={resetGame}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
+              className="w-full bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
             >
               <RotateCcw className="inline mr-2 mb-1" size={24} />
               Nueva Partida
