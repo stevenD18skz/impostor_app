@@ -5,9 +5,11 @@ interface RoleRevealProps {
   player: any;
   secretWord: string;
   onReady: () => void;
+  playerHasReady: boolean;
+  loadingState: boolean;
 }
 
-export default function RoleReveal({ player, secretWord, onReady }: RoleRevealProps) {
+export default function RoleReveal({ player, secretWord, onReady, playerHasReady, loadingState }: RoleRevealProps) {
   const [isRevealed, setIsRevealed] = useState(false);
 
   return (
@@ -57,12 +59,18 @@ export default function RoleReveal({ player, secretWord, onReady }: RoleRevealPr
             )}
           </div>
 
-          <button
-            onClick={onReady}
-            className="w-full bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
-          >
-            🎮 Entendido, ir al juego
-          </button>
+          {!playerHasReady ? (
+            <button
+              onClick={onReady}
+              className="w-full bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
+            >
+              {loadingState ? 'Confirmando...' : '🎮 Entendido, ir al juego'}
+            </button>
+          )
+          : (
+            <span className="text-white text-lg">Esperando a que todos estén listos...  </span>
+          )}
+
         </div>
       )}
     </div>

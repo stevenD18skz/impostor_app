@@ -56,16 +56,16 @@ export default function GameRunning({ room, isHost, onEndGame }: GameRunningProp
         </div>
       </div>
 
-      {isHost && (
+       
         <div className="flex gap-4">
           <button
             onClick={onEndGame}
-            className="w-full bg-linear-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all"
+            className="w-full bg-green-300 text-white font-bold py-3 px-6 rounded-xl hover:bg-green-600 transition-all"
           >
             🏁 Terminar Partida
           </button>
         </div>
-      )}
+      
     </div>
   );
 }

@@ -114,13 +114,13 @@ export default function LocalGame({ onBack }: LocalGameProps) {
   return (
     <div className="text-center space-y-8 w-full max-w-2xl">
         {gameState === 'setup' && (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-4">
             <div>
               <h1 className="text-5xl font-bold text-white mb-2">🕵️ EL IMPOSTOR</h1>
               <p className="text-purple-200 text-lg">Modo Local</p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
                 <label className="block text-white text-lg font-semibold mb-3">
                   🎯 Categoría
@@ -315,12 +315,12 @@ export default function LocalGame({ onBack }: LocalGameProps) {
         )}
 
         {gameState === 'playing' && (
-          <div className="text-center space-y-8">
+          <div className="text-center space-y-4">
             <h2 className="text-4xl font-bold text-white">🎮 ¡Juego en Curso!</h2>
             <h3 className="text-4xl font-bold text-white">🧪 La categoria es {selectedCategory} 🧪</h3>
             
-            <div className="bg-indigo-500/30 border-2 border-blue-400 rounded-3xl p-12">
-              <p className="text-white text-lg mb-4">Tiempo Restante</p>
+            <div className="bg-indigo-500/30 border-2 border-blue-400 rounded-3xl p-4">
+              <p className="text-white text-lg mb-2">Tiempo Restante</p>
               <p className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
                 {formatTime(timeLeft)}
               </p>
@@ -341,7 +341,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
               </div>
             </div>
 
-            <div className="bg-white/10 rounded-2xl p-6 space-y-4">
+            <div className="bg-white/10 rounded-2xl px-6 py-4 space-y-4">
               <p className="text-white text-lg">📋 Instrucciones:</p>
               <ul className="text-purple-200 text-left space-y-2">
                 <li>• Los inocentes deben hablar sobre la palabra sin decirla directamente</li>

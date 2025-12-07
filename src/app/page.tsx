@@ -6,7 +6,8 @@ import Lobby from '@/components/Lobby';
 import RoleReveal from '@/components/RoleReveal';
 import GameRunning from '@/components/GameRunning';
 import GameEnd from '@/components/GameEnd';
-import LocalGame from '@/components/LocalGame';
+import LocalGame from '@/app/local/components/LocalGame';
+import { useRouter } from 'next/navigation';
 
 export default function ImpostorGame() {
   const [mode, setMode] = useState<'menu' | 'local' | 'multiplayer'>('menu');
@@ -17,6 +18,8 @@ export default function ImpostorGame() {
   const [loadingState, setLoadingState] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [myPlayer, setMyPlayer] = useState<any>(null);
+
+  const router = useRouter();
 
   // Polling logic
   useEffect(() => {
@@ -108,28 +111,71 @@ export default function ImpostorGame() {
 
 
 
+  const handleLocalPlay = () => {
+    router.push('/local');
+  };
+
+
+
+  const LeaveRoom = async () => {
+    setMode('menu');
+    return
+
+    setLoadingState(true);
+    try {
+      await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'leaveRoom', roomCode })
+      });
+    } catch (error) {
+      console.error("Error leaving room", error);
+    } finally {
+      setLoadingState(false);
+      setMode('menu');
+    }
+    resetGame();
+  };
+
+
+
+  const confirmRole = async () => {
+    console.log("confirmandooooo rol");
+    setLoadingState(true);
+    try {
+      await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'confirmRole', roomCode, playerName })
+      });
+    } catch (error) {
+      console.error("Error confirming role", error);
+    } finally {
+      setLoadingState(false);
+    }
+  };
+
+
+
   if (mode === 'menu' || (!room && mode !== 'local')) {
     return (
       <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-          <GameSetup onJoin={handleJoin} onLocalPlay={() => setMode('local')} />
+          <GameSetup onJoin={handleJoin} onLocalPlay={handleLocalPlay} />
         </div>
       </div>
     );
   }
 
+  
+  const allPlayersReady = room?.players.every((p: any) => p.ready);
+  const playerHasReady = room?.gameData.readyPlayers.find((p: any) => p === playerName);
 
-
-  if (mode === 'local') {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-          <LocalGame onBack={() => setMode('menu')} />
-        </div>
-      </div>
-    );
-  }
-
+   
+  console.log("room", room);
+  console.log("roomGameState", room.gameState);
+  console.log("allPlayersReady", allPlayersReady);
+  console.log("playerHasReady", playerHasReady);
 
 
   return (
@@ -142,6 +188,8 @@ export default function ImpostorGame() {
             isHost={isHost}
             onUpdateSettings={updateSettings}
             onStartGame={startGame}
+            loadingState={loadingState}
+            onLeaveRoom={LeaveRoom}
           />
         )}
 
@@ -150,9 +198,12 @@ export default function ImpostorGame() {
           <RoleReveal
             player={myPlayer}
             secretWord={room.gameData.secretWord}
-            onReady={() => setHasRevealed(true)}
+            onReady={confirmRole}
+            playerHasReady={playerHasReady}
+            loadingState={loadingState}
           />
         )}
+
 
         {room.gameState === 'playing' && (
           <GameRunning
@@ -161,6 +212,7 @@ export default function ImpostorGame() {
             onEndGame={endGame}
           />
         )}
+
 
         {room.gameState === 'ended' && (
           <GameEnd room={room} onReset={resetGame} />

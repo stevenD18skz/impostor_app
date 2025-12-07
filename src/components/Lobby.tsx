@@ -7,9 +7,11 @@ interface LobbyProps {
   isHost: boolean;
   onUpdateSettings: (settings: any) => void;
   onStartGame: () => void;
+  onLeaveRoom: () => void;
+  loadingState: boolean;
 }
 
-export default function Lobby({ room, isHost, onUpdateSettings, onStartGame }: LobbyProps) {
+export default function Lobby({ room, isHost, onUpdateSettings, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
   const [showSettings, setShowSettings] = useState(false);
 
   const handleSettingChange = (key: string, value: any) => {
@@ -19,8 +21,8 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame }: L
   return (
     <div className="text-center space-y-8">
       <div className="flex flex-col items-center justify-center gap-4">
-        <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" onClick={() => {}}>
-          Salir de la sala
+        <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" onClick={() => { onLeaveRoom() }}>
+          {loadingState ? 'Saliendo...' : 'Salir de la sala'}
         </button>
         <div className="flex flex-col items-center justify-center">
           <h2 className="text-4xl font-bold text-white mb-2">🏠 Sala: {room.code}</h2>
@@ -58,7 +60,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame }: L
             <Settings size={24} />
             Configuración
           </h3>
-          
+
           <div className="space-y-4 text-left">
             <div>
               <label className="block text-purple-200 text-sm mb-1">Categoría</label>
@@ -77,7 +79,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame }: L
                 </select>
               ) : (
                 <div className="text-white font-medium">
-                   {/* @ts-ignore */}
+                  {/* @ts-ignore */}
                   {categorias[room.settings.category]?.nombre || room.settings.category}
                 </div>
               )}
@@ -124,7 +126,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame }: L
           className="w-full bg-emerald-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:transform-none"
         >
           <Play className="inline mr-2 mb-1" size={24} />
-          Iniciar Partida
+          {loadingState ? 'Iniciando...' : 'Iniciar Partida'}
         </button>
       ) : (
         <div className="text-purple-200 animate-pulse">
