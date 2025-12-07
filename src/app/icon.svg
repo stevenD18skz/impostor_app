@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" fill="#1a1f35" />
+
+    <!-- Cuerpo del impostor -->
+    <g transform="translate(32, 32)">
+        <!-- Cuerpo principal -->
+        <path d="M -12 -8 L -14 12 L -8 18 L 8 18 L 14 12 L 12 -8 Z" fill="#e63946" />
+
+        <!-- Visor -->
+        <ellipse cx="0" cy="-4" rx="10" ry="6" fill="#87ceeb" opacity="0.9" />
+        <ellipse cx="0" cy="-4" rx="8" ry="4.5" fill="#b8e6f5" opacity="0.7" />
+
+        <!-- Piernas -->
+        <rect x="-10" y="16" width="6" height="8" rx="3" fill="#c92e39" />
+        <rect x="4" y="16" width="6" height="8" rx="3" fill="#c92e39" />
+
+        <!-- Sombra del visor -->
+        <ellipse cx="0" cy="-4" rx="6" ry="3" fill="#4a9bb5" opacity="0.3" />
+    </g>
+</svg>

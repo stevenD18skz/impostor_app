@@ -140,7 +140,6 @@ export default function ImpostorGame() {
 
 
   const confirmRole = async () => {
-    console.log("confirmandooooo rol");
     setLoadingState(true);
     try {
       await fetch('/api/game', {
@@ -170,12 +169,6 @@ export default function ImpostorGame() {
   
   const allPlayersReady = room?.players.every((p: any) => p.ready);
   const playerHasReady = room?.gameData.readyPlayers.find((p: any) => p === playerName);
-
-   
-  console.log("room", room);
-  console.log("roomGameState", room.gameState);
-  console.log("allPlayersReady", allPlayersReady);
-  console.log("playerHasReady", playerHasReady);
 
 
   return (
