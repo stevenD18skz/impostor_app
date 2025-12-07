@@ -13,6 +13,10 @@ export default function ImpostorGame() {
   const [room, setRoom] = useState<any>(null);
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+  const [hasRevealed, setHasRevealed] = useState(false);
+  const [loadingState, setLoadingState] = useState(false);
+  const [isHost, setIsHost] = useState(false);
+  const [myPlayer, setMyPlayer] = useState<any>(null);
 
   // Polling logic
   useEffect(() => {
@@ -36,12 +40,18 @@ export default function ImpostorGame() {
     return () => clearInterval(interval);
   }, [roomCode, mode]);
 
+
+
   const handleJoin = (code: string, name: string, roomData: any) => {
     setRoomCode(code);
     setPlayerName(name);
     setRoom(roomData);
     setMode('multiplayer');
+    setIsHost(roomData.host === name);
+    setMyPlayer(roomData.players.find((p: any) => p.name === name));
   };
+
+
 
   const updateSettings = async (settings: any) => {
     await fetch('/api/game', {
@@ -51,21 +61,43 @@ export default function ImpostorGame() {
     });
   };
 
+
+
   const startGame = async () => {
-    await fetch('/api/game', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'startGame', roomCode })
-    });
+    setLoadingState(true);
+
+    try {
+      await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'startGame', roomCode })
+      });
+    } catch (error) {
+      console.error("Error starting game", error);
+    } finally {
+      setLoadingState(false);
+    }
   };
 
+
+
   const endGame = async () => {
-    await fetch('/api/game', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'endGame', roomCode })
-    });
+    setLoadingState(true);
+
+    try {
+      await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'endGame', roomCode })
+      });
+    } catch (error) {
+      console.error("Error ending game", error);
+    } finally {
+      setLoadingState(false);
+    }
   };
+
+
 
   const resetGame = () => {
     setRoom(null);
@@ -74,19 +106,11 @@ export default function ImpostorGame() {
     setMode('menu');
   };
 
-  if (mode === 'local') {
-    return (
-      <div className="min-h-screen bg-linear-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-          <LocalGame onBack={() => setMode('menu')} />
-        </div>
-      </div>
-    );
-  }
 
-  if (mode === 'menu' || !room) {
+
+  if (mode === 'menu' || (!room && mode !== 'local')) {
     return (
-      <div className="min-h-screen bg-linear-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
           <GameSetup onJoin={handleJoin} onLocalPlay={() => setMode('local')} />
         </div>
@@ -94,38 +118,48 @@ export default function ImpostorGame() {
     );
   }
 
-  const isHost = room.host === playerName;
-  const myPlayer = room.players.find((p: any) => p.name === playerName);
+
+
+  if (mode === 'local') {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
+          <LocalGame onBack={() => setMode('menu')} />
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
-    <div className="min-h-screen bg-linear-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+    <div className="min-h-screen  bg-blue-900 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-        
+
         {room.gameState === 'setup' && (
-          <Lobby 
-            room={room} 
-            isHost={isHost} 
-            onUpdateSettings={updateSettings} 
-            onStartGame={startGame} 
+          <Lobby
+            room={room}
+            isHost={isHost}
+            onUpdateSettings={updateSettings}
+            onStartGame={startGame}
           />
         )}
 
-        {room.gameState === 'lobby' && (
-           <Lobby 
-            room={room} 
-            isHost={isHost} 
-            onUpdateSettings={updateSettings} 
-            onStartGame={startGame} 
+
+        {room.gameState === 'reveal' && (
+          <RoleReveal
+            player={myPlayer}
+            secretWord={room.gameData.secretWord}
+            onReady={() => setHasRevealed(true)}
           />
         )}
 
         {room.gameState === 'playing' && (
-           <GameController 
-             room={room} 
-             isHost={isHost} 
-             myPlayer={myPlayer} 
-             onEndGame={endGame} 
-           />
+          <GameRunning
+            room={room}
+            isHost={isHost}
+            onEndGame={endGame}
+          />
         )}
 
         {room.gameState === 'ended' && (
@@ -134,28 +168,5 @@ export default function ImpostorGame() {
 
       </div>
     </div>
-  );
-}
-
-// Sub-component to handle local reveal state
-function GameController({ room, isHost, myPlayer, onEndGame }: any) {
-  const [hasRevealed, setHasRevealed] = useState(false);
-
-  if (!hasRevealed) {
-    return (
-      <RoleReveal 
-        player={myPlayer} 
-        secretWord={room.gameData.secretWord} 
-        onReady={() => setHasRevealed(true)} 
-      />
-    );
-  }
-
-  return (
-    <GameRunning 
-      room={room} 
-      isHost={isHost} 
-      onEndGame={onEndGame} 
-    />
   );
 }

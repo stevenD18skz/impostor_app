@@ -60,6 +60,8 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
     }
   };
 
+  console.log(playerName, roomCode);
+
   return (
     <div className="text-center space-y-8">
       <div>
@@ -86,9 +88,9 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
           <button
             onClick={createRoom}
             disabled={isJoining}
-            className="w-full bg-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all shadow-lg disabled:opacity-50"
+            className="w-full bg-pink-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-purple-600 transition-all shadow-lg disabled:opacity-50"
           >
-            {isJoining ? 'Creando...' : '✨ Crear Sala'}
+            {isJoining ? 'Uniendote a la sala...' : '✨ Crear Sala'}
           </button>
         </div>
 
@@ -107,7 +109,7 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
               disabled={isJoining}
               className="bg-blue-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all shadow-lg disabled:opacity-50"
             >
-              Entrar
+              {isJoining ? 'Uniendo...' : 'Entrar'}
             </button>
           </div>
         </div>
