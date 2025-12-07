@@ -6,15 +6,17 @@ import Lobby from '@/components/Lobby';
 import RoleReveal from '@/components/RoleReveal';
 import GameRunning from '@/components/GameRunning';
 import GameEnd from '@/components/GameEnd';
+import LocalGame from '@/components/LocalGame';
 
 export default function ImpostorGame() {
+  const [mode, setMode] = useState<'menu' | 'local' | 'multiplayer'>('menu');
   const [room, setRoom] = useState<any>(null);
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
 
   // Polling logic
   useEffect(() => {
-    if (!roomCode) return;
+    if (!roomCode || mode !== 'multiplayer') return;
 
     const interval = setInterval(async () => {
       try {
@@ -32,12 +34,13 @@ export default function ImpostorGame() {
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);
-  }, [roomCode]);
+  }, [roomCode, mode]);
 
   const handleJoin = (code: string, name: string, roomData: any) => {
     setRoomCode(code);
     setPlayerName(name);
     setRoom(roomData);
+    setMode('multiplayer');
   };
 
   const updateSettings = async (settings: any) => {
@@ -46,7 +49,6 @@ export default function ImpostorGame() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'updateSettings', roomCode, settings })
     });
-    // Optimistic update or wait for poll
   };
 
   const startGame = async () => {
@@ -69,13 +71,24 @@ export default function ImpostorGame() {
     setRoom(null);
     setRoomCode('');
     setPlayerName('');
+    setMode('menu');
   };
 
-  if (!room) {
+  if (mode === 'local') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-          <GameSetup onJoin={handleJoin} />
+          <LocalGame onBack={() => setMode('menu')} />
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'menu' || !room) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
+          <GameSetup onJoin={handleJoin} onLocalPlay={() => setMode('local')} />
         </div>
       </div>
     );
@@ -107,10 +120,6 @@ export default function ImpostorGame() {
         )}
 
         {room.gameState === 'playing' && (
-           // We can handle the "Reveal" phase locally or as a sub-state
-           // For simplicity, let's say if we haven't seen our role, show reveal
-           // But since we don't have local state for "seen role" yet, let's add it or assume 'playing' starts with reveal
-           // Actually, let's use a local state for "ready"
            <GameController 
              room={room} 
              isHost={isHost} 
