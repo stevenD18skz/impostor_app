@@ -6,6 +6,43 @@ interface GameSetupProps {
   onLocalPlay: () => void;
 }
 
+// 🎯 Tipo para las reglas de validación
+type ValidationRule = {
+  field: string;
+  value: any;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: RegExp;
+  message: string;
+};
+
+// 🔍 Función de validación genérica
+const validate = (rules: ValidationRule[]): string | null => {
+  for (const rule of rules) {
+    // Validar campo requerido
+    if (rule.required && (!rule.value || rule.value.trim() === '')) {
+      return rule.message;
+    }
+
+    // Validar longitud mínima
+    if (rule.minLength && rule.value.length < rule.minLength) {
+      return `${rule.field} debe tener al menos ${rule.minLength} caracteres`;
+    }
+
+    // Validar longitud máxima
+    if (rule.maxLength && rule.value.length > rule.maxLength) {
+      return `${rule.field} no puede tener más de ${rule.maxLength} caracteres`;
+    }
+
+    // Validar patrón (regex)
+    if (rule.pattern && !rule.pattern.test(rule.value)) {
+      return rule.message;
+    }
+  }
+  return null;
+};
+
 export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
@@ -13,10 +50,23 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
   const [error, setError] = useState('');
 
   const createRoom = async () => {
-    if (!playerName) {
-      setError('Por favor ingresa tu nombre');
+    // 📋 Definir reglas de validación para crear sala
+    const validationError = validate([
+      {
+        field: 'Nombre',
+        value: playerName,
+        required: true,
+        minLength: 2,
+        maxLength: 20,
+        message: 'Por favor ingresa tu nombre (mínimo 2 caracteres)'
+      }
+    ]);
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
+
     setError('');
     setIsJoining(true);
 
@@ -37,10 +87,32 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
   };
 
   const joinRoom = async () => {
-    if (!playerName || !roomCode) {
-      setError('Por favor ingresa tu nombre y el código de la sala');
+    // 📋 Definir reglas de validación para unirse a sala
+    const validationError = validate([
+      {
+        field: 'Nombre',
+        value: playerName,
+        required: true,
+        minLength: 2,
+        maxLength: 20,
+        message: 'Por favor ingresa tu nombre (mínimo 2 caracteres)'
+      },
+      {
+        field: 'Código de sala',
+        value: roomCode,
+        required: true,
+        minLength: 6,
+        maxLength: 6,
+        pattern: /^[A-Z0-9]{6}$/,
+        message: 'El código de sala debe tener 6 caracteres'
+      }
+    ]);
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
+
     setError('');
     setIsJoining(true);
 
@@ -59,8 +131,6 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
       setIsJoining(false);
     }
   };
-
-  console.log(playerName, roomCode);
 
   return (
     <div className="text-center space-y-8">
