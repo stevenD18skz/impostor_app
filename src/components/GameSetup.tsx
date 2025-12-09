@@ -1,72 +1,22 @@
 import { useState } from 'react';
-import { Play, Users } from 'lucide-react';
 
 interface GameSetupProps {
-  onJoin: (roomCode: string, playerName: string, roomData: any) => void;
-  onLocalPlay: () => void;
+  handleJoin: (roomCode: string, playerName: string, roomData: any) => void;
+  handleLocalPlay: () => void;
 }
 
-// 🎯 Tipo para las reglas de validación
-type ValidationRule = {
-  field: string;
-  value: any;
-  required?: boolean;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: RegExp;
-  message: string;
-};
-
-// 🔍 Función de validación genérica
-const validate = (rules: ValidationRule[]): string | null => {
-  for (const rule of rules) {
-    // Validar campo requerido
-    if (rule.required && (!rule.value || rule.value.trim() === '')) {
-      return rule.message;
-    }
-
-    // Validar longitud mínima
-    if (rule.minLength && rule.value.length < rule.minLength) {
-      return `${rule.field} debe tener al menos ${rule.minLength} caracteres`;
-    }
-
-    // Validar longitud máxima
-    if (rule.maxLength && rule.value.length > rule.maxLength) {
-      return `${rule.field} no puede tener más de ${rule.maxLength} caracteres`;
-    }
-
-    // Validar patrón (regex)
-    if (rule.pattern && !rule.pattern.test(rule.value)) {
-      return rule.message;
-    }
-  }
-  return null;
-};
-
-export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
+export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProps) {
+  // INPUTS
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+
+  // STATE
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState('');
 
+
+
   const createRoom = async () => {
-    // 📋 Definir reglas de validación para crear sala
-    const validationError = validate([
-      {
-        field: 'Nombre',
-        value: playerName,
-        required: true,
-        minLength: 2,
-        maxLength: 20,
-        message: 'Por favor ingresa tu nombre (mínimo 2 caracteres)'
-      }
-    ]);
-
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     setError('');
     setIsJoining(true);
 
@@ -77,8 +27,9 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
         body: JSON.stringify({ action: 'create', playerName })
       });
       const data = await res.json();
+      console.log(data);
       if (data.error) throw new Error(data.error);
-      onJoin(data.roomCode, playerName, data.room);
+      handleJoin(data.roomCode, data.room, data.myPlayer);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -86,33 +37,9 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
     }
   };
 
+
+
   const joinRoom = async () => {
-    // 📋 Definir reglas de validación para unirse a sala
-    const validationError = validate([
-      {
-        field: 'Nombre',
-        value: playerName,
-        required: true,
-        minLength: 2,
-        maxLength: 20,
-        message: 'Por favor ingresa tu nombre (mínimo 2 caracteres)'
-      },
-      {
-        field: 'Código de sala',
-        value: roomCode,
-        required: true,
-        minLength: 6,
-        maxLength: 6,
-        pattern: /^[A-Z0-9]{6}$/,
-        message: 'El código de sala debe tener 6 caracteres'
-      }
-    ]);
-
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     setError('');
     setIsJoining(true);
 
@@ -124,13 +51,15 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      onJoin(roomCode.toUpperCase(), playerName, data.room);
+      handleJoin(data.roomCode, data.room, data.myPlayer);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsJoining(false);
     }
   };
+
+
 
   return (
     <div className="text-center space-y-8">
@@ -193,7 +122,7 @@ export default function GameSetup({ onJoin, onLocalPlay }: GameSetupProps) {
         <div className="pt-4 border-t border-white/10">
           <p className="text-white mb-4 font-semibold">O Jugar Local</p>
           <button
-            onClick={onLocalPlay}
+            onClick={handleLocalPlay}
             className="w-full bg-gray-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-gray-700 transition-all shadow-lg"
           >
             📱 Jugar Local (Un solo dispositivo)

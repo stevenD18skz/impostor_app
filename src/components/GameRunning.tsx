@@ -9,7 +9,7 @@ interface GameRunningProps {
 export default function GameRunning({ room, onEndGame }: GameRunningProps) {
   // Local timer for smooth countdown, synced with server occasionally if needed
   // For simplicity, we'll just use the server time or a local countdown that starts when we enter
-  const [timeLeft, setTimeLeft] = useState(room.gameData.timeLeft);
+  const [timeLeft, setTimeLeft] = useState(room.game_data.timeLeft);
   
   useEffect(() => {
     // Simple countdown
@@ -43,7 +43,7 @@ export default function GameRunning({ room, onEndGame }: GameRunningProps) {
       <div className="bg-white/10 rounded-2xl p-6 space-y-4">
         <p className="text-white text-xl font-bold mb-4">📋 Orden de Turnos:</p>
         <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto">
-          {room.gameData.playingOrder.map((player: any, idx: number) => (
+          {room.game_data.playingOrder.map((player: any, idx: number) => (
             <div 
               key={idx} 
               className="bg-white/10 rounded-lg p-3 border border-white/20"

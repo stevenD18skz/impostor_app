@@ -1,19 +1,37 @@
 import { Users, Play, Settings } from 'lucide-react';
 import { categorias } from '@/app/lib/data';
+import { useState, useEffect } from 'react';
 
 interface LobbyProps {
   room: any;
   player: any;
-  onUpdateSettings: (settings: any) => void;
+  settingsRoom: any;
   onStartGame: () => void;
   onLeaveRoom: () => void;
   loadingState: boolean;
 }
 
-export default function Lobby({ room, player, onUpdateSettings, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
-  const handleSettingChange = (key: string, value: any) => {
-    onUpdateSettings({ [key]: value });
-  };
+export default function Lobby({ room, player, settingsRoom, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
+  const [settingsForms, setSettingsForms] = useState({
+    category: settingsRoom.category,
+    numImpostors: settingsRoom.numImpostors,
+    timeLimit: settingsRoom.timeLimit
+  });
+
+
+  useEffect(() => {
+    setSettingsForms({
+      category: settingsRoom.category,
+      numImpostors: settingsRoom.numImpostors,
+      timeLimit: settingsRoom.timeLimit
+    });
+  }, [settingsRoom]);
+
+
+
+  console.log("settingsForms ====");
+  console.log(settingsForms);
+
 
   return (
     <div className="text-center space-y-8">
@@ -56,6 +74,8 @@ export default function Lobby({ room, player, onUpdateSettings, onStartGame, onL
           <h3 className="text-xl font-bold text-white mb-4 flex items-center justify-center gap-2">
             <Settings size={24} />
             Configuración
+            {player.is_host ? ' (Host)' : ' (View)'}
+            {loadingState ? ' (Loading) ' : 'no'}
           </h3>
 
           <div className="space-y-4 text-left">
@@ -63,8 +83,8 @@ export default function Lobby({ room, player, onUpdateSettings, onStartGame, onL
               <label className="block text-purple-200 text-sm mb-1">Categoría</label>
               {player.is_host ? (
                 <select
-                  value={room.settings.category}
-                  onChange={(e) => handleSettingChange('category', e.target.value)}
+                  value={settingsForms.category}
+                  onChange={(e) => setSettingsForms({ ...settingsForms, category: e.target.value })}
                   className="w-full px-3 py-2 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none"
                 >
                   {Object.keys(categorias).map(key => (
@@ -77,7 +97,7 @@ export default function Lobby({ room, player, onUpdateSettings, onStartGame, onL
               ) : (
                 <div className="text-white font-medium">
                   {/* @ts-ignore */}
-                  {categorias[room.settings.category]?.nombre || room.settings.category}
+                  {categorias[settingsForms.category]?.nombre || settingsForms.category}
                 </div>
               )}
             </div>
@@ -89,12 +109,12 @@ export default function Lobby({ room, player, onUpdateSettings, onStartGame, onL
                   type="number"
                   min="1"
                   max={Math.max(1, room.players.length - 1)}
-                  value={room.settings.numImpostors}
-                  onChange={(e) => handleSettingChange('numImpostors', parseInt(e.target.value))}
+                  value={settingsForms.numImpostors}
+                  onChange={(e) => setSettingsForms({ ...settingsForms, numImpostors: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none"
                 />
               ) : (
-                <div className="text-white font-medium">{room.settings.numImpostors}</div>
+                <div className="text-white font-medium">{settingsForms.numImpostors}</div>
               )}
             </div>
 
@@ -104,12 +124,12 @@ export default function Lobby({ room, player, onUpdateSettings, onStartGame, onL
                 <input
                   type="number"
                   step="30"
-                  value={room.settings.timeLimit}
-                  onChange={(e) => handleSettingChange('timeLimit', parseInt(e.target.value))}
+                  value={settingsForms.timeLimit}
+                  onChange={(e) => setSettingsForms({ ...settingsForms, timeLimit: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none"
                 />
               ) : (
-                <div className="text-white font-medium">{room.settings.timeLimit}</div>
+                <div className="text-white font-medium">{settingsForms.timeLimit}</div>
               )}
             </div>
           </div>

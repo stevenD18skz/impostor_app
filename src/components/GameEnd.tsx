@@ -14,7 +14,7 @@ export default function GameEnd({ room, onReset }: GameEndProps) {
       
       <div className="bg-white/10 rounded-2xl p-8 space-y-4">
         <p className="text-white text-2xl mb-4">La palabra secreta era:</p>
-        <p className="text-yellow-300 text-5xl font-bold">{room.gameData.secretWord}</p>
+        <p className="text-yellow-300 text-5xl font-bold">{room.game_data.secretWord}</p>
 
         <p className="text-white text-2xl mt-8 mb-4">El impostor era:</p>
         <p className="text-red-400 text-5xl font-bold">{impostor?.name || 'Desconocido'}</p>

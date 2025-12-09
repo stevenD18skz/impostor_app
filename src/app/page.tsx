@@ -10,13 +10,16 @@ import LocalGame from '@/app/local/components/LocalGame';
 import { useRouter } from 'next/navigation';
 
 export default function ImpostorGame() {
+  // Room state
   const [mode, setMode] = useState<'menu' | 'local' | 'multiplayer'>('menu');
   const [room, setRoom] = useState<any>(null);
-  const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+
+  // Game state
   const [loadingState, setLoadingState] = useState(false);
   const [myPlayer, setMyPlayer] = useState<any>(null);
 
+  // Navigation
   const router = useRouter();
 
   // Polling logic
@@ -26,12 +29,13 @@ export default function ImpostorGame() {
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/game?code=${roomCode}`);
+        console.log("res ============================aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         if (res.ok) {
           const data = await res.json();
           setRoom(data);
           // Actualizar myPlayer también para todos los jugadores (no solo el host)
-          if (data.players && playerName) {
-            const updatedPlayer = data.players.find((p: any) => p.name === playerName);
+          if (data.players && myPlayer) {
+            const updatedPlayer = data.players.find((p: any) => p.name === myPlayer.name);
             if (updatedPlayer) {
               setMyPlayer(updatedPlayer);
             }
@@ -46,29 +50,40 @@ export default function ImpostorGame() {
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);
-  }, [roomCode, mode, playerName]);
+  }, [roomCode, mode, myPlayer]);
 
 
 
-  const handleJoin = (code: string, name: string, roomData: any) => {
+  // GAME SETUP
+  const handleJoin = (code: string, roomData: any, myPlayer: any) => {
     setRoomCode(code);
-    setPlayerName(name);
     setRoom(roomData);
-
+    setMyPlayer(myPlayer);
     setMode('multiplayer');
-    setMyPlayer(roomData.players.find((p: any) => p.name === name));
+  };
+
+
+  const handleLocalPlay = () => {
+    router.push('/local');
   };
 
 
 
+  // LOBBY
   const updateSettings = async (settings: any) => {
+    setLoadingState(true);
+    try {
     await fetch('/api/game', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'updateSettings', roomCode, settings })
     });
+    } catch (error) {
+      console.error("Error updating settings", error);
+    } finally {
+      setLoadingState(false);
+    }
   };
-
 
 
   const startGame = async () => {
@@ -81,7 +96,8 @@ export default function ImpostorGame() {
         body: JSON.stringify({ action: 'startGame', roomCode })
       });
       const data = await res.json();
-      setMyPlayer(data?.room?.players?.find((p: any) => p.name === playerName));
+      setRoom(data?.room);
+      setMyPlayer(data?.room?.players?.find((p: any) => p.name === myPlayer.name));
     } catch (error) {
       console.error("Error starting game", error);
     } finally {
@@ -90,7 +106,32 @@ export default function ImpostorGame() {
   };
 
 
+  const LeaveRoom = async () => {
+    setMode('menu');
+  };
 
+
+
+  // ROLE REVEAL
+  const confirmRole = async () => {
+    setLoadingState(true);
+    try {
+      const playerName = myPlayer.name;
+      await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'confirmRole', roomCode, playerName })
+      });
+    } catch (error) {
+      console.error("Error confirming role", error);
+    } finally {
+      setLoadingState(false);
+    }
+  };
+
+
+
+  // GAME END
   const endGame = async () => {
     setLoadingState(true);
 
@@ -108,7 +149,6 @@ export default function ImpostorGame() {
   };
 
 
-
   const resetGame = async () => {
     setLoadingState(true);
 
@@ -122,7 +162,7 @@ export default function ImpostorGame() {
       if (res.ok) {
         const data = await res.json();
         setRoom(data.room);
-        setMyPlayer(data.room.players.find((p: any) => p.name === playerName));
+        setMyPlayer(data.room.players.find((p: any) => p.name === myPlayer.name));
       }
     } catch (error) {
       console.error("Error resetting game", error);
@@ -131,82 +171,43 @@ export default function ImpostorGame() {
     }
   };
 
-
-
-
-  const LeaveRoom = async () => {
-    setMode('menu');
-    return
-
-    setLoadingState(true);
-    try {
-      await fetch('/api/game', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'leaveRoom', roomCode })
-      });
-    } catch (error) {
-      console.error("Error leaving room", error);
-    } finally {
-      setLoadingState(false);
-      setMode('menu');
-    }
-    resetGame();
-  };
-
-
-
-  const confirmRole = async () => {
-    setLoadingState(true);
-    try {
-      await fetch('/api/game', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'confirmRole', roomCode, playerName })
-      });
-    } catch (error) {
-      console.error("Error confirming role", error);
-    } finally {
-      setLoadingState(false);
-    }
-  };
-
+  
 
 
   if (mode === 'menu' || (!room && mode !== 'local')) {
     return (
       <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-          <GameSetup onJoin={handleJoin} onLocalPlay={() => router.push('/local')} />
+          <GameSetup handleJoin={handleJoin} handleLocalPlay={handleLocalPlay} />
         </div>
       </div>
     );
   }
 
 
-  const playerHasReady = room?.gameData.readyPlayers.find((p: any) => p === playerName);
+  const playerHasReady = room?.game_data.readyPlayers.find((p: any) => p === myPlayer.name);
 
 
   return (
     <div className="min-h-screen  bg-blue-900 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
 
-        {room.gameState === 'setup' && (
+        {room.game_state === 'setup' && (
           <Lobby
             room={room}
             player={myPlayer}
-            onUpdateSettings={updateSettings}
+            settingsRoom={room.settings}
             onStartGame={startGame}
-            loadingState={loadingState}
             onLeaveRoom={LeaveRoom}
+            loadingState={loadingState}
           />
         )}
 
 
-        {room.gameState === 'reveal' && (
+        {room.game_state === 'reveal' && (
           <RoleReveal
             player={myPlayer}
-            secretWord={room.gameData.secretWord}
+            secretWord={room.game_data.secretWord}
             onReady={confirmRole}
             playerHasReady={playerHasReady}
             loadingState={loadingState}
@@ -214,7 +215,7 @@ export default function ImpostorGame() {
         )}
 
 
-        {room.gameState === 'playing' && (
+        {room.game_state === 'playing' && (
           <GameRunning
             room={room}
             onEndGame={endGame}
@@ -222,7 +223,7 @@ export default function ImpostorGame() {
         )}
 
 
-        {room.gameState === 'ended' && (
+        {room.game_state === 'ended' && (
           <GameEnd room={room} onReset={resetGame} />
         )}
       </div>

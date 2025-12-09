@@ -8,14 +8,9 @@ const generateRoomCode = () => Math.random().toString(36).substring(2, 8).toUppe
 // Helper to map Supabase room data to frontend format
 const mapRoomData = (room: any, players: any[]) => ({
   ...room,
-  gameState: room.game_state,
-  gameData: room.game_data,
-  lastUpdated: room.last_updated,
-  players: (players || []).map(p => ({
-    ...p,
-    is_host: p.is_host,
-    is_impostor: p.is_impostor
-  }))
+  players: players.map((player: any) => ({
+    ...player
+  })) 
 });
 
 export async function GET(request: Request) {
@@ -54,6 +49,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { action, roomCode, playerName, settings, gameData } = body;
 
+  //GAME SETUP
   if (action === 'create') {
     const newRoomCode = generateRoomCode();
 
@@ -86,16 +82,17 @@ export async function POST(request: Request) {
     }
 
     // Crear el jugador anfitrión
-    const { error: playerError } = await supabase
+    const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
         room_id: newRoom.id,
         name: playerName,
         is_host: true,
         is_impostor: false
-      });
+      }).select()
+      .single();  
 
-    if (playerError) {
+    if (playerError || !player) {
       return NextResponse.json({ error: 'Error creating player' }, { status: 500 });
     }
 
@@ -107,7 +104,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       roomCode: newRoomCode,
-      room: mapRoomData(newRoom, players || [])
+      room: mapRoomData(newRoom, players || []),
+      myPlayer: player
     });
   }
 
@@ -144,16 +142,17 @@ export async function POST(request: Request) {
     }
 
     // Agregar el jugador
-    const { error: playerError } = await supabase
+    const { data: player, error: playerError } = await supabase
       .from('players')
       .insert({
         room_id: room.id,
         name: playerName,
         is_host: false,
         is_impostor: false
-      });
+      }).select()
+      .single();
 
-    if (playerError) {
+    if (playerError || !player) {
       console.log(`[JOIN] Error creating player:`, playerError);
       return NextResponse.json({ error: 'Error joining room' }, { status: 500 });
     }
@@ -164,9 +163,16 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', room.id);
 
-    return NextResponse.json({ room: mapRoomData(room, players || []) });
-  }
+    return NextResponse.json({ 
+      roomCode: roomCode,
+      room: mapRoomData(room, players || []),
+      myPlayer: player
+    });
+  } 
 
+
+
+  // LOBBY
   if (action === 'updateSettings') {
     const { data: room, error: roomError } = await supabase
       .from('rooms')
