@@ -10,7 +10,7 @@ const mapRoomData = (room: any, players: any[]) => ({
   ...room,
   players: players.map((player: any) => ({
     ...player
-  })) 
+  }))
 });
 
 export async function GET(request: Request) {
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
         is_host: true,
         is_impostor: false
       }).select()
-      .single();  
+      .single();
 
     if (playerError || !player) {
       return NextResponse.json({ error: 'Error creating player' }, { status: 500 });
@@ -163,13 +163,159 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', room.id);
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       roomCode: roomCode,
       room: mapRoomData(room, players || []),
       myPlayer: player
     });
-  } 
+  }
 
+  // REJOIN - Reconectar a una sala existente
+  if (action === 'rejoin') {
+    console.log(`[REJOIN] Attempting to rejoin room: ${roomCode} as ${playerName}`);
+
+    // Buscar la sala
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      console.log(`[REJOIN] Room not found or error:`, roomError);
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    // Buscar al jugador en la sala
+    const { data: player, error: playerError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id)
+      .eq('name', playerName)
+      .single();
+
+    if (playerError || !player) {
+      console.log(`[REJOIN] Player not found in room:`, playerError);
+      return NextResponse.json({ error: 'Player not found in room' }, { status: 404 });
+    }
+
+    // Obtener todos los jugadores actualizados
+    const { data: players } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    console.log(`[REJOIN] Successfully rejoined room ${roomCode}`);
+    return NextResponse.json({
+      roomCode: roomCode,
+      room: mapRoomData(room, players || []),
+      myPlayer: player
+    });
+  }
+
+  // LEAVE - Salir de una sala
+  if (action === 'leave') {
+    console.log(`[LEAVE] Player ${playerName} attempting to leave room ${roomCode}`);
+
+    // Buscar la sala
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      console.log(`[LEAVE] Room not found:`, roomError);
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    // Buscar al jugador
+    const { data: player, error: playerError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id)
+      .eq('name', playerName)
+      .single();
+
+    if (playerError || !player) {
+      console.log(`[LEAVE] Player not found:`, playerError);
+      return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+    }
+
+    const wasHost = player.is_host;
+
+    // Eliminar al jugador
+    const { error: deleteError } = await supabase
+      .from('players')
+      .delete()
+      .eq('id', player.id);
+
+    if (deleteError) {
+      console.log(`[LEAVE] Error deleting player:`, deleteError);
+      return NextResponse.json({ error: 'Error leaving room' }, { status: 500 });
+    }
+
+    // Obtener jugadores restantes
+    const { data: remainingPlayers, error: playersError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    if (playersError) {
+      console.log(`[LEAVE] Error fetching remaining players:`, playersError);
+      return NextResponse.json({ error: 'Error checking remaining players' }, { status: 500 });
+    }
+
+    // Si no quedan jugadores, eliminar la sala
+    if (!remainingPlayers || remainingPlayers.length === 0) {
+      console.log(`[LEAVE] Room is empty, deleting room ${roomCode}`);
+
+      const { error: deleteRoomError } = await supabase
+        .from('rooms')
+        .delete()
+        .eq('id', room.id);
+
+      if (deleteRoomError) {
+        console.log(`[LEAVE] Error deleting room:`, deleteRoomError);
+        return NextResponse.json({ error: 'Error deleting room' }, { status: 500 });
+      }
+
+      console.log(`[LEAVE] Room ${roomCode} deleted successfully`);
+      return NextResponse.json({ success: true, roomDeleted: true });
+    }
+
+    // Si el que se fue era el host y quedan jugadores, transferir host
+    if (wasHost) {
+      console.log(`[LEAVE] Host left, transferring host to first remaining player`);
+
+      const newHost = remainingPlayers[0];
+
+      const { error: updateHostError } = await supabase
+        .from('players')
+        .update({ is_host: true })
+        .eq('id', newHost.id);
+
+      if (updateHostError) {
+        console.log(`[LEAVE] Error transferring host:`, updateHostError);
+        return NextResponse.json({ error: 'Error transferring host' }, { status: 500 });
+      }
+
+      // Actualizar el host en la sala
+      const { error: updateRoomError } = await supabase
+        .from('rooms')
+        .update({ host: newHost.name })
+        .eq('id', room.id);
+
+      if (updateRoomError) {
+        console.log(`[LEAVE] Error updating room host:`, updateRoomError);
+      }
+
+      console.log(`[LEAVE] Host transferred to ${newHost.name}`);
+    }
+
+    console.log(`[LEAVE] Player ${playerName} left successfully`);
+    return NextResponse.json({ success: true, roomDeleted: false });
+  }
 
 
   // LOBBY
