@@ -14,9 +14,7 @@ export default function ImpostorGame() {
   const [room, setRoom] = useState<any>(null);
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
-  const [hasRevealed, setHasRevealed] = useState(false);
   const [loadingState, setLoadingState] = useState(false);
-  const [isHost, setIsHost] = useState(false);
   const [myPlayer, setMyPlayer] = useState<any>(null);
 
   const router = useRouter();
@@ -31,6 +29,13 @@ export default function ImpostorGame() {
         if (res.ok) {
           const data = await res.json();
           setRoom(data);
+          // Actualizar myPlayer también para todos los jugadores (no solo el host)
+          if (data.players && playerName) {
+            const updatedPlayer = data.players.find((p: any) => p.name === playerName);
+            if (updatedPlayer) {
+              setMyPlayer(updatedPlayer);
+            }
+          }
         } else {
           // Handle error (e.g., room closed)
           console.error("Error fetching room");
@@ -41,7 +46,7 @@ export default function ImpostorGame() {
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);
-  }, [roomCode, mode]);
+  }, [roomCode, mode, playerName]);
 
 
 
@@ -49,8 +54,8 @@ export default function ImpostorGame() {
     setRoomCode(code);
     setPlayerName(name);
     setRoom(roomData);
+
     setMode('multiplayer');
-    setIsHost(roomData.host === name);
     setMyPlayer(roomData.players.find((p: any) => p.name === name));
   };
 
@@ -70,11 +75,13 @@ export default function ImpostorGame() {
     setLoadingState(true);
 
     try {
-      await fetch('/api/game', {
+      const res = await fetch('/api/game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'startGame', roomCode })
       });
+      const data = await res.json();
+      setMyPlayer(data?.room?.players?.find((p: any) => p.name === playerName));
     } catch (error) {
       console.error("Error starting game", error);
     } finally {
@@ -102,18 +109,28 @@ export default function ImpostorGame() {
 
 
 
-  const resetGame = () => {
-    setRoom(null);
-    setRoomCode('');
-    setPlayerName('');
-    setMode('menu');
+  const resetGame = async () => {
+    setLoadingState(true);
+
+    try {
+      const res = await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resetGame', roomCode })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setRoom(data.room);
+        setMyPlayer(data.room.players.find((p: any) => p.name === playerName));
+      }
+    } catch (error) {
+      console.error("Error resetting game", error);
+    } finally {
+      setLoadingState(false);
+    }
   };
 
-
-
-  const handleLocalPlay = () => {
-    router.push('/local');
-  };
 
 
 
@@ -160,14 +177,13 @@ export default function ImpostorGame() {
     return (
       <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-          <GameSetup onJoin={handleJoin} onLocalPlay={handleLocalPlay} />
+          <GameSetup onJoin={handleJoin} onLocalPlay={() => router.push('/local')} />
         </div>
       </div>
     );
   }
 
-  
-  const allPlayersReady = room?.players.every((p: any) => p.ready);
+
   const playerHasReady = room?.gameData.readyPlayers.find((p: any) => p === playerName);
 
 
@@ -178,7 +194,7 @@ export default function ImpostorGame() {
         {room.gameState === 'setup' && (
           <Lobby
             room={room}
-            isHost={isHost}
+            player={myPlayer}
             onUpdateSettings={updateSettings}
             onStartGame={startGame}
             loadingState={loadingState}
@@ -201,7 +217,6 @@ export default function ImpostorGame() {
         {room.gameState === 'playing' && (
           <GameRunning
             room={room}
-            isHost={isHost}
             onEndGame={endGame}
           />
         )}
@@ -210,7 +225,6 @@ export default function ImpostorGame() {
         {room.gameState === 'ended' && (
           <GameEnd room={room} onReset={resetGame} />
         )}
-
       </div>
     </div>
   );

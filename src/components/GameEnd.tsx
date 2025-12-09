@@ -28,7 +28,7 @@ export default function GameEnd({ room, onReset }: GameEndProps) {
 
       <button
         onClick={onReset}
-        className="w-full bg-linear-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
+        className="w-full bg-linear-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
       >
         <RotateCcw className="inline mr-2 mb-1" size={24} />
         Volver al Lobby

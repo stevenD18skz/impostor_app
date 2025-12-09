@@ -11,7 +11,7 @@ interface RoleRevealProps {
 
 export default function RoleReveal({ player, secretWord, onReady, playerHasReady, loadingState }: RoleRevealProps) {
   const [isRevealed, setIsRevealed] = useState(false);
-
+  
   return (
     <div className="text-center space-y-8">
       <div className="bg-indigo-500/30 rounded-2xl p-6 border-2 border-purple-400">

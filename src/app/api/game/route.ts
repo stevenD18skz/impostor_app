@@ -13,8 +13,8 @@ const mapRoomData = (room: any, players: any[]) => ({
   lastUpdated: room.last_updated,
   players: (players || []).map(p => ({
     ...p,
-    isHost: p.is_host,
-    isImpostor: p.is_impostor
+    is_host: p.is_host,
+    is_impostor: p.is_impostor
   }))
 });
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
   if (action === 'create') {
     const newRoomCode = generateRoomCode();
-    
+
     // Crear la sala en Supabase
     const { data: newRoom, error: roomError } = await supabase
       .from('rooms')
@@ -105,8 +105,8 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', newRoom.id);
 
-    return NextResponse.json({ 
-      roomCode: newRoomCode, 
+    return NextResponse.json({
+      roomCode: newRoomCode,
       room: mapRoomData(newRoom, players || [])
     });
   }
@@ -415,6 +415,74 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ room: mapRoomData(updatedRoom, players || []) });
   }
+
+  if (action === 'resetGame') {
+    const { data: room, error: roomError } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('code', roomCode)
+      .single();
+
+    if (roomError || !room) {
+      return NextResponse.json({ error: 'Room not found' }, { status: 404 });
+    }
+
+    const { data: players, error: playersError } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    if (playersError || !players) {
+      return NextResponse.json({ error: 'Error fetching players' }, { status: 500 });
+    }
+
+    // Resetear todos los jugadores como NO impostores
+    for (let i = 0; i < players.length; i++) {
+      await supabase
+        .from('players')
+        .update({ is_impostor: false })
+        .eq('id', players[i].id);
+    }
+
+    // Obtener jugadores actualizados
+    const { data: updatedPlayers } = await supabase
+      .from('players')
+      .select('*')
+      .eq('room_id', room.id);
+
+    const { timeLimit } = room.settings as any;
+
+    // Resetear sala al estado 'setup' con datos vacíos
+    const { error: updateError } = await supabase
+      .from('rooms')
+      .update({
+        game_state: 'setup',
+        game_data: {
+          secretWord: '',
+          timeLeft: timeLimit || 180,
+          playingOrder: [],
+          currentPlayerIndex: 0,
+          startTime: null,
+          readyPlayers: []
+        }
+      })
+      .eq('id', room.id);
+
+    if (updateError) {
+      return NextResponse.json({ error: 'Error resetting game' }, { status: 500 });
+    }
+
+    // Obtener sala actualizada
+    const { data: finalRoom } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('id', room.id)
+      .single();
+
+    return NextResponse.json({ room: mapRoomData(finalRoom, updatedPlayers || []) });
+  }
+
+
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }

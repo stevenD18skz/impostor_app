@@ -1,19 +1,16 @@
-import { useState } from 'react';
 import { Users, Play, Settings } from 'lucide-react';
 import { categorias } from '@/app/lib/data';
 
 interface LobbyProps {
   room: any;
-  isHost: boolean;
+  player: any;
   onUpdateSettings: (settings: any) => void;
   onStartGame: () => void;
   onLeaveRoom: () => void;
   loadingState: boolean;
 }
 
-export default function Lobby({ room, isHost, onUpdateSettings, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
-  const [showSettings, setShowSettings] = useState(false);
-
+export default function Lobby({ room, player, onUpdateSettings, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
   const handleSettingChange = (key: string, value: any) => {
     onUpdateSettings({ [key]: value });
   };
@@ -44,7 +41,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame, onL
                   {player.name[0].toUpperCase()}
                 </div>
                 <span className="text-white font-medium">{player.name}</span>
-                {player.isHost && (
+                {player.is_host && (
                   <span className="text-xs bg-yellow-500 text-black px-2 py-1 rounded-full font-bold">
                     HOST
                   </span>
@@ -64,7 +61,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame, onL
           <div className="space-y-4 text-left">
             <div>
               <label className="block text-purple-200 text-sm mb-1">Categoría</label>
-              {isHost ? (
+              {player.is_host ? (
                 <select
                   value={room.settings.category}
                   onChange={(e) => handleSettingChange('category', e.target.value)}
@@ -87,7 +84,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame, onL
 
             <div>
               <label className="block text-purple-200 text-sm mb-1">Impostores</label>
-              {isHost ? (
+              {player.is_host ? (
                 <input
                   type="number"
                   min="1"
@@ -103,7 +100,7 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame, onL
 
             <div>
               <label className="block text-purple-200 text-sm mb-1">Tiempo (seg)</label>
-              {isHost ? (
+              {player.is_host ? (
                 <input
                   type="number"
                   step="30"
@@ -119,10 +116,10 @@ export default function Lobby({ room, isHost, onUpdateSettings, onStartGame, onL
         </div>
       </div>
 
-      {isHost ? (
+      {player.is_host ? (
         <button
           onClick={onStartGame}
-          disabled={room.players.length < 3}
+          disabled={room.players.length < 1}
           className="w-full bg-emerald-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:transform-none"
         >
           <Play className="inline mr-2 mb-1" size={24} />

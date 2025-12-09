@@ -3,11 +3,10 @@ import { RotateCcw } from 'lucide-react';
 
 interface GameRunningProps {
   room: any;
-  isHost: boolean;
   onEndGame: () => void;
 }
 
-export default function GameRunning({ room, isHost, onEndGame }: GameRunningProps) {
+export default function GameRunning({ room, onEndGame }: GameRunningProps) {
   // Local timer for smooth countdown, synced with server occasionally if needed
   // For simplicity, we'll just use the server time or a local countdown that starts when we enter
   const [timeLeft, setTimeLeft] = useState(room.gameData.timeLeft);
