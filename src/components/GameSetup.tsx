@@ -27,7 +27,6 @@ export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProp
         body: JSON.stringify({ action: 'create', playerName })
       });
       const data = await res.json();
-      console.log(data);
       if (data.error) throw new Error(data.error);
       handleJoin(data.roomCode, data.room, data.myPlayer);
     } catch (err: any) {

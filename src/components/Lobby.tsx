@@ -24,6 +24,10 @@ export default function Lobby({ room, player, settingsRoom, updateSettings, onSt
     updateSettings(settings);
   };
 
+  useEffect(() => {
+    setSettingsForms(room.settings)
+  }, [room]);
+
   return (
     <div className="text-center space-y-8">
       <div className="flex flex-col items-center justify-center gap-4">

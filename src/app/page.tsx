@@ -27,10 +27,8 @@ export default function ImpostorGame() {
 
   // Callbacks memoizados para evitar re-renders infinitos
   const handleRoomUpdate = useCallback((updatedRoom: any) => {
-    console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-    console.log(updatedRoom);
-    console.log(myPlayer);
     setRoom(updatedRoom);
+
   }, []);
 
   const handlePlayerUpdate = useCallback((updatedPlayer: any) => {
