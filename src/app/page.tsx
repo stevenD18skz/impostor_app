@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import GameSetup from '@/components/GameSetup';
 import Lobby from '@/components/Lobby';
 import RoleReveal from '@/components/RoleReveal';
@@ -8,6 +8,7 @@ import GameRunning from '@/components/GameRunning';
 import GameEnd from '@/components/GameEnd';
 import LocalGame from '@/app/local/components/LocalGame';
 import { useRouter } from 'next/navigation';
+import { useRealtimeRoom } from '@/hooks/useRealtimeRoom';
 
 export default function ImpostorGame() {
   // Room state
@@ -22,35 +23,28 @@ export default function ImpostorGame() {
   // Navigation
   const router = useRouter();
 
-  // Polling logic
-  useEffect(() => {
-    if (!roomCode || mode !== 'multiplayer') return;
 
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/game?code=${roomCode}`);
-        console.log("res ============================aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-        if (res.ok) {
-          const data = await res.json();
-          setRoom(data);
-          // Actualizar myPlayer también para todos los jugadores (no solo el host)
-          if (data.players && myPlayer) {
-            const updatedPlayer = data.players.find((p: any) => p.name === myPlayer.name);
-            if (updatedPlayer) {
-              setMyPlayer(updatedPlayer);
-            }
-          }
-        } else {
-          // Handle error (e.g., room closed)
-          console.error("Error fetching room");
-        }
-      } catch (error) {
-        console.error("Polling error", error);
-      }
-    }, 2000); // Poll every 2 seconds
 
-    return () => clearInterval(interval);
-  }, [roomCode, mode, myPlayer]);
+  // Callbacks memoizados para evitar re-renders infinitos
+  const handleRoomUpdate = useCallback((updatedRoom: any) => {
+    console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    console.log(updatedRoom);
+    console.log(myPlayer);
+    setRoom(updatedRoom);
+  }, []);
+
+  const handlePlayerUpdate = useCallback((updatedPlayer: any) => {
+    setMyPlayer(updatedPlayer);
+  }, []);
+
+  // Realtime subscription - reemplaza el polling
+  useRealtimeRoom(
+    roomCode,
+    mode === 'multiplayer',
+    myPlayer?.name || '',
+    handleRoomUpdate,
+    handlePlayerUpdate
+  );
 
 
 
@@ -71,13 +65,14 @@ export default function ImpostorGame() {
 
   // LOBBY
   const updateSettings = async (settings: any) => {
+    console.log("Updating settings", settings);
     setLoadingState(true);
     try {
-    await fetch('/api/game', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'updateSettings', roomCode, settings })
-    });
+      await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'updateSettings', roomCode, settings })
+      });
     } catch (error) {
       console.error("Error updating settings", error);
     } finally {
@@ -171,7 +166,7 @@ export default function ImpostorGame() {
     }
   };
 
-  
+
 
 
   if (mode === 'menu' || (!room && mode !== 'local')) {
@@ -197,6 +192,7 @@ export default function ImpostorGame() {
             room={room}
             player={myPlayer}
             settingsRoom={room.settings}
+            updateSettings={updateSettings}
             onStartGame={startGame}
             onLeaveRoom={LeaveRoom}
             loadingState={loadingState}

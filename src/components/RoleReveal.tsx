@@ -38,19 +38,19 @@ export default function RoleReveal({ player, secretWord, onReady, playerHasReady
         </div>
       ) : (
         <div className="space-y-6">
-          <div className={`rounded-2xl p-8 border-4 ${player.isImpostor ? 'bg-red-900/40 border-red-400' : 'bg-green-900/40 border-green-400'}`}>
+          <div className={`rounded-2xl p-8 border-4 ${player.is_impostor ? 'bg-red-900/40 border-red-400' : 'bg-green-900/40 border-green-400'}`}>
             <h3 className="text-2xl font-bold text-white mb-4">
-              {player.isImpostor ? '🎭 ERES EL IMPOSTOR' : '✅ ERES INOCENTE'}
+              {player.is_impostor ? '🎭 ERES EL IMPOSTOR' : '✅ ERES INOCENTE'}
             </h3>
             
-            {!player.isImpostor && (
+            {!player.is_impostor && (
               <div className="bg-white/20 rounded-xl p-6 mt-4">
                 <p className="text-white text-sm mb-2">Tu palabra secreta es:</p>
                 <p className="text-white text-4xl font-bold">{secretWord}</p>
               </div>
             )}
 
-            {player.isImpostor && (
+            {player.is_ && (
               <div className="bg-white/20 rounded-xl p-6 mt-4">
                 <p className="text-white text-lg">
                   No conoces la palabra secreta. Intenta descubrirla escuchando a los demás.

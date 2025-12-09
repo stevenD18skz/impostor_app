@@ -208,6 +208,7 @@ export async function POST(request: Request) {
       .select('*')
       .eq('room_id', room.id);
 
+    // Devolver sala actualizada
     return NextResponse.json({ room: mapRoomData(updatedRoom, players || []) });
   }
 
@@ -295,6 +296,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ room: mapRoomData(finalRoom, updatedPlayers || []) });
   }
 
+
+
+  // REVEAL
   if (action === 'confirmRole') {
     const { data: room, error: roomError } = await supabase
       .from('rooms')
@@ -348,6 +352,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ room: mapRoomData(updatedRoom, players || []) });
   }
 
+
+
+  // PLAYING
   if (action === 'updateGame') {
     const { data: room, error: roomError } = await supabase
       .from('rooms')

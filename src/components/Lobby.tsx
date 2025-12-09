@@ -6,32 +6,23 @@ interface LobbyProps {
   room: any;
   player: any;
   settingsRoom: any;
+  updateSettings: (settings: any) => void;
   onStartGame: () => void;
   onLeaveRoom: () => void;
   loadingState: boolean;
 }
 
-export default function Lobby({ room, player, settingsRoom, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
+export default function Lobby({ room, player, settingsRoom, updateSettings, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
   const [settingsForms, setSettingsForms] = useState({
     category: settingsRoom.category,
     numImpostors: settingsRoom.numImpostors,
     timeLimit: settingsRoom.timeLimit
   });
 
-
-  useEffect(() => {
-    setSettingsForms({
-      category: settingsRoom.category,
-      numImpostors: settingsRoom.numImpostors,
-      timeLimit: settingsRoom.timeLimit
-    });
-  }, [settingsRoom]);
-
-
-
-  console.log("settingsForms ====");
-  console.log(settingsForms);
-
+  const updateSettingsForms = (settings: any) => {
+    setSettingsForms(settings);
+    updateSettings(settings);
+  };
 
   return (
     <div className="text-center space-y-8">
@@ -84,7 +75,7 @@ export default function Lobby({ room, player, settingsRoom, onStartGame, onLeave
               {player.is_host ? (
                 <select
                   value={settingsForms.category}
-                  onChange={(e) => setSettingsForms({ ...settingsForms, category: e.target.value })}
+                  onChange={(e) => updateSettingsForms({ ...settingsForms, category: e.target.value })}
                   className="w-full px-3 py-2 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none"
                 >
                   {Object.keys(categorias).map(key => (
@@ -110,7 +101,7 @@ export default function Lobby({ room, player, settingsRoom, onStartGame, onLeave
                   min="1"
                   max={Math.max(1, room.players.length - 1)}
                   value={settingsForms.numImpostors}
-                  onChange={(e) => setSettingsForms({ ...settingsForms, numImpostors: parseInt(e.target.value) })}
+                  onChange={(e) => updateSettingsForms({ ...settingsForms, numImpostors: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none"
                 />
               ) : (
@@ -125,7 +116,7 @@ export default function Lobby({ room, player, settingsRoom, onStartGame, onLeave
                   type="number"
                   step="30"
                   value={settingsForms.timeLimit}
-                  onChange={(e) => setSettingsForms({ ...settingsForms, timeLimit: parseInt(e.target.value) })}
+                  onChange={(e) => updateSettingsForms({ ...settingsForms, timeLimit: parseInt(e.target.value) })}
                   className="w-full px-3 py-2 bg-white/20 text-white rounded-lg border border-white/30 focus:outline-none"
                 />
               ) : (
