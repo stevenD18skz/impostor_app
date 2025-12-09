@@ -17,9 +17,18 @@ export default function ImpostorGame() {
   const [roomCode, setRoomCode] = useState('');
 
   // Game state
-  const [loadingState, setLoadingState] = useState(false);
   const [myPlayer, setMyPlayer] = useState<any>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
+
+  // Loading states - usando objeto para manejar múltiples estados de carga
+  const [loading, setLoading] = useState({
+    leaving: false,
+    updating: false,
+    starting: false,
+    confirming: false,
+    ending: false,
+    resetting: false
+  });
 
   // Navigation
   const router = useRouter();
@@ -123,7 +132,7 @@ export default function ImpostorGame() {
   // LOBBY
   const updateSettings = async (settings: any) => {
     console.log("Updating settings", settings);
-    setLoadingState(true);
+    setLoading(prev => ({ ...prev, updating: true }));
     try {
       await fetch('/api/game', {
         method: 'POST',
@@ -133,13 +142,13 @@ export default function ImpostorGame() {
     } catch (error) {
       console.error("Error updating settings", error);
     } finally {
-      setLoadingState(false);
+      setLoading(prev => ({ ...prev, updating: false }));
     }
   };
 
 
   const startGame = async () => {
-    setLoadingState(true);
+    setLoading(prev => ({ ...prev, starting: true }));
 
     try {
       const res = await fetch('/api/game', {
@@ -153,13 +162,13 @@ export default function ImpostorGame() {
     } catch (error) {
       console.error("Error starting game", error);
     } finally {
-      setLoadingState(false);
+      setLoading(prev => ({ ...prev, starting: false }));
     }
   };
 
 
   const LeaveRoom = async () => {
-    setLoadingState(true);
+    setLoading(prev => ({ ...prev, leaving: true }));
     try {
       // Llamar al endpoint para salir de la sala
       await fetch('/api/game', {
@@ -184,6 +193,7 @@ export default function ImpostorGame() {
       setRoomCode('');
       setMyPlayer(null);
       setMode('menu');
+      setLoading(prev => ({ ...prev, leaving: false }));
     }
   };
 
@@ -191,7 +201,7 @@ export default function ImpostorGame() {
 
   // ROLE REVEAL
   const confirmRole = async () => {
-    setLoadingState(true);
+    setLoading(prev => ({ ...prev, confirming: true }));
     try {
       const playerName = myPlayer.name;
       await fetch('/api/game', {
@@ -202,7 +212,7 @@ export default function ImpostorGame() {
     } catch (error) {
       console.error("Error confirming role", error);
     } finally {
-      setLoadingState(false);
+      setLoading(prev => ({ ...prev, confirming: false }));
     }
   };
 
@@ -210,7 +220,7 @@ export default function ImpostorGame() {
 
   // GAME END
   const endGame = async () => {
-    setLoadingState(true);
+    setLoading(prev => ({ ...prev, ending: true }));
 
     try {
       await fetch('/api/game', {
@@ -221,13 +231,13 @@ export default function ImpostorGame() {
     } catch (error) {
       console.error("Error ending game", error);
     } finally {
-      setLoadingState(false);
+      setLoading(prev => ({ ...prev, ending: false }));
     }
   };
 
 
   const resetGame = async () => {
-    setLoadingState(true);
+    setLoading(prev => ({ ...prev, resetting: true }));
 
     try {
       const res = await fetch('/api/game', {
@@ -244,7 +254,7 @@ export default function ImpostorGame() {
     } catch (error) {
       console.error("Error resetting game", error);
     } finally {
-      setLoadingState(false);
+      setLoading(prev => ({ ...prev, resetting: false }));
     }
   };
 
@@ -292,7 +302,7 @@ export default function ImpostorGame() {
             updateSettings={updateSettings}
             onStartGame={startGame}
             onLeaveRoom={LeaveRoom}
-            loadingState={loadingState}
+            loading={loading}
           />
         )}
 
@@ -303,7 +313,7 @@ export default function ImpostorGame() {
             secretWord={room.game_data.secretWord}
             onReady={confirmRole}
             playerHasReady={playerHasReady}
-            loadingState={loadingState}
+            loading={loading}
           />
         )}
 
