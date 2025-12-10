@@ -9,10 +9,17 @@ interface LobbyProps {
   updateSettings: (settings: any) => void;
   onStartGame: () => void;
   onLeaveRoom: () => void;
-  loadingState: boolean;
+  loading: {
+    leaving: boolean;
+    updating: boolean;
+    starting: boolean;
+    confirming: boolean;
+    ending: boolean;
+    resetting: boolean;
+  };
 }
 
-export default function Lobby({ room, player, settingsRoom, updateSettings, onStartGame, onLeaveRoom, loadingState }: LobbyProps) {
+export default function Lobby({ room, player, settingsRoom, updateSettings, onStartGame, onLeaveRoom, loading }: LobbyProps) {
   const [settingsForms, setSettingsForms] = useState({
     category: settingsRoom.category,
     numImpostors: settingsRoom.numImpostors,
@@ -32,7 +39,7 @@ export default function Lobby({ room, player, settingsRoom, updateSettings, onSt
     <div className="text-center space-y-8">
       <div className="flex flex-col items-center justify-center gap-4">
         <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded" onClick={() => { onLeaveRoom() }}>
-          {loadingState ? 'Saliendo...' : 'Salir de la sala'}
+          {loading.leaving ? 'Saliendo...' : 'Salir de la sala'}
         </button>
         <div className="flex flex-col items-center justify-center">
           <h2 className="text-4xl font-bold text-white mb-2">🏠 Sala: {room.code}</h2>
@@ -70,7 +77,7 @@ export default function Lobby({ room, player, settingsRoom, updateSettings, onSt
             <Settings size={24} />
             Configuración
             {player.is_host ? ' (Host)' : ' (View)'}
-            {loadingState ? ' (Loading) ' : 'no'}
+            
           </h3>
 
           <div className="space-y-4 text-left">
@@ -138,7 +145,11 @@ export default function Lobby({ room, player, settingsRoom, updateSettings, onSt
           className="w-full bg-emerald-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-green-600 hover:to-emerald-600 transform hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:transform-none"
         >
           <Play className="inline mr-2 mb-1" size={24} />
-          {loadingState ? 'Iniciando...' : 'Iniciar Partida'}
+          {
+            loading.starting
+              ? 'Iniciando...'
+              : 'Iniciar Partida'
+          }
         </button>
       ) : (
         <div className="text-purple-200 animate-pulse">

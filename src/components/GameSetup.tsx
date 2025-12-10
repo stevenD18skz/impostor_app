@@ -1,4 +1,16 @@
 import { useState } from 'react';
+import { z } from 'zod';
+
+// Esquemas de validación con Zod
+const playerNameSchema = z.string()
+  .min(2, 'El nombre debe tener al menos 2 caracteres')
+  .max(20, 'El nombre no puede tener más de 20 caracteres')
+  .trim()
+  .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras y espacios');
+
+const roomCodeSchema = z.string()
+  .length(6, 'El código de sala debe tener exactamente 6 caracteres')
+  .regex(/^[A-Z0-9]+$/, 'El código solo puede contener letras mayúsculas y números');
 
 interface GameSetupProps {
   handleJoin: (roomCode: string, playerName: string, roomData: any) => void;
@@ -21,16 +33,24 @@ export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProp
     setIsJoining(true);
 
     try {
+      // Validar el nombre del jugador con Zod
+      playerNameSchema.parse(playerName);
+
       const res = await fetch('/api/game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', playerName })
+        body: JSON.stringify({ action: 'create', playerName: playerName.trim() })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       handleJoin(data.roomCode, data.room, data.myPlayer);
     } catch (err: any) {
-      setError(err.message);
+      // Manejar errores de validación de Zod
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsJoining(false);
     }
@@ -43,16 +63,26 @@ export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProp
     setIsJoining(true);
 
     try {
+      // Validar el nombre del jugador con Zod
+      playerNameSchema.parse(playerName);
+      // Validar el código de sala con Zod
+      roomCodeSchema.parse(roomCode.toUpperCase());
+
       const res = await fetch('/api/game', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'join', roomCode: roomCode.toUpperCase(), playerName })
+        body: JSON.stringify({ action: 'join', roomCode: roomCode.toUpperCase(), playerName: playerName.trim() })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       handleJoin(data.roomCode, data.room, data.myPlayer);
     } catch (err: any) {
-      setError(err.message);
+      // Manejar errores de validación de Zod
+      if (err instanceof z.ZodError) {
+        setError(err.issues[0].message);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setIsJoining(false);
     }
