@@ -6,7 +6,6 @@ import Lobby from '@/components/Lobby';
 import RoleReveal from '@/components/RoleReveal';
 import GameRunning from '@/components/GameRunning';
 import GameEnd from '@/components/GameEnd';
-import LocalGame from '@/app/local/components/LocalGame';
 import { useRouter } from 'next/navigation';
 import { useRealtimeRoom } from '@/hooks/useRealtimeRoom';
 
