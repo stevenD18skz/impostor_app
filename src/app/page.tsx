@@ -18,6 +18,7 @@ export default function ImpostorGame() {
   // Game state
   const [myPlayer, setMyPlayer] = useState<any>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
+  const [playerHasReady, setPlayerHasReady] = useState(false);
 
   // Loading states - usando objeto para manejar múltiples estados de carga
   const [loading, setLoading] = useState({
@@ -86,7 +87,7 @@ export default function ImpostorGame() {
   }, []);
 
 
-
+  
   // Callbacks memoizados para evitar re-renders infinitos
   const handleRoomUpdate = useCallback((updatedRoom: any) => {
     setRoom(updatedRoom);
@@ -212,6 +213,7 @@ export default function ImpostorGame() {
       console.error("Error confirming role", error);
     } finally {
       setLoading(prev => ({ ...prev, confirming: false }));
+      setPlayerHasReady(true);
     }
   };
 
@@ -260,9 +262,6 @@ export default function ImpostorGame() {
 
 
 
-
-
-
   // Mostrar loading mientras se restaura la sesión
   if (isRestoringSession) {
     return (
@@ -284,9 +283,6 @@ export default function ImpostorGame() {
       </div>
     );
   }
-
-
-  const playerHasReady = room?.game_data.readyPlayers.find((p: any) => p === myPlayer.name);
 
 
   return (
@@ -326,7 +322,7 @@ export default function ImpostorGame() {
 
 
         {room.game_state === 'ended' && (
-          <GameEnd room={room} onReset={resetGame} />
+          <GameEnd room={room} onReset={resetGame} loading={loading} />
         )}
       </div>
     </div>

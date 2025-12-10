@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { categorias } from '@/app/lib/data';
 import SetupState from '@/app/local/components/SetupState';

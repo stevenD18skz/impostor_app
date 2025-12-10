@@ -19,6 +19,8 @@ interface RoleRevealProps {
 export default function RoleReveal({ player, secretWord, onReady, playerHasReady, loading }: RoleRevealProps) {
   const [isRevealed, setIsRevealed] = useState(false);
 
+  
+  
   return (
     <div className="text-center space-y-8">
       <div className="bg-indigo-500/30 rounded-2xl p-6 border-2 border-purple-400">
@@ -57,7 +59,7 @@ export default function RoleReveal({ player, secretWord, onReady, playerHasReady
               </div>
             )}
 
-            {player.is_ && (
+            {player.is_impostor && (
               <div className="bg-white/20 rounded-xl p-6 mt-4">
                 <p className="text-white text-lg">
                   No conoces la palabra secreta. Intenta descubrirla escuchando a los demás.
@@ -77,7 +79,6 @@ export default function RoleReveal({ player, secretWord, onReady, playerHasReady
             : (
               <span className="text-white text-lg">Esperando a que todos estén listos...  </span>
             )}
-
         </div>
       )}
     </div>
