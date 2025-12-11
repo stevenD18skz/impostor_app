@@ -7,17 +7,14 @@ import NamesState from '@/app/local/components/NamesState';
 import RevealState from '@/app/local/components/RevealState';
 import PlayingState from '@/app/local/components/PlayingState';
 import EndedState from '@/app/local/components/EndedState';
+import { useRouter } from 'next/navigation';
 
 interface Player {
   isImpostor: boolean;
   name: string;
 }
 
-interface LocalGameProps {
-  onBack: () => void;
-}
-
-export default function LocalGame({ onBack }: LocalGameProps) {
+export default function LocalGame() {
   const [gameState, setGameState] = useState('setup'); // setup, names, reveal, playing, ended
   const [numPlayers, setNumPlayers] = useState(4);
   const [numImpostors, setNumImpostors] = useState(1);
@@ -31,6 +28,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
   const [timeLeft, setTimeLeft] = useState(180);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [playingOrder, setPlayingOrder] = useState<Player[]>([]);
+    const router = useRouter();
 
   useEffect(() => {
     let interval: string | number | NodeJS.Timeout | undefined;
@@ -117,8 +115,21 @@ export default function LocalGame({ onBack }: LocalGameProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleBack = () => {
+    router.back();
+    return
+    setGameState('setup');
+    setCurrentPlayer(0);
+    setShowRole(false);
+    setPlayers([]);
+    setSecretWord('');
+    setTimeLeft(timeLimit);
+    setIsTimerRunning(false);
+  };
+
   return (
-    <div className="text-center space-y-8 w-full max-w-2xl min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+    <div className="text-center space-y-8 w-full min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
       {gameState === 'setup' && (
         <SetupState
           selectedCategory={selectedCategory}
@@ -129,7 +140,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
           setNumImpostors={setNumImpostors}
           timeLimit={timeLimit}
           setTimeLimit={setTimeLimit}
-          onBack={onBack}
+          onBack={handleBack}
           onContinue={goToNames}
         />
       )}
@@ -175,7 +186,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
           players={players}
           onResetGame={resetGame}
         />
-      )}
+      )}</div>
     </div>
   );
 }
