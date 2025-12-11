@@ -118,7 +118,7 @@ export default function LocalGame({ onBack }: LocalGameProps) {
   };
 
   return (
-    <div className="text-center space-y-8 w-full max-w-2xl">
+    <div className="text-center space-y-8 w-full max-w-2xl min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       {gameState === 'setup' && (
         <SetupState
           selectedCategory={selectedCategory}
