@@ -14,99 +14,175 @@ interface Player {
   name: string;
 }
 
+interface GameData {
+  gameState: 'setup' | 'names' | 'reveal' | 'playing' | 'ended';
+  config: {
+    numPlayers: number;
+    numImpostors: number;
+    selectedCategory: string;
+    timeLimit: number;
+  };
+  game: {
+    players: Player[];
+    playerNames: string[];
+    secretWord: string;
+    playingOrder: Player[];
+    currentPlayer: number;
+    showRole: boolean;
+  };
+  timer: {
+    timeLeft: number;
+    isTimerRunning: boolean;
+  };
+}
+
+const initialGameData: GameData = {
+  gameState: 'setup',
+  config: {
+    numPlayers: 4,
+    numImpostors: 1,
+    selectedCategory: 'comida',
+    timeLimit: 180,
+  },
+  game: {
+    players: [],
+    playerNames: [],
+    secretWord: '',
+    playingOrder: [],
+    currentPlayer: 0,
+    showRole: false,
+  },
+  timer: {
+    timeLeft: 180,
+    isTimerRunning: false,
+  },
+};
+
 export default function LocalGame() {
-  const [gameState, setGameState] = useState('setup'); // setup, names, reveal, playing, ended
-  const [numPlayers, setNumPlayers] = useState(4);
-  const [numImpostors, setNumImpostors] = useState(1);
-  const [currentPlayer, setCurrentPlayer] = useState(0);
-  const [showRole, setShowRole] = useState(false);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [playerNames, setPlayerNames] = useState<string[]>([]);
-  const [secretWord, setSecretWord] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('comida');
-  const [timeLimit, setTimeLimit] = useState(180);
-  const [timeLeft, setTimeLeft] = useState(180);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [playingOrder, setPlayingOrder] = useState<Player[]>([]);
-    const router = useRouter();
+  const [gameData, setGameData] = useState<GameData>(initialGameData);
+  const router = useRouter();
 
   useEffect(() => {
     let interval: string | number | NodeJS.Timeout | undefined;
-    if (isTimerRunning && timeLeft > 0) {
+    if (gameData.timer.isTimerRunning && gameData.timer.timeLeft > 0) {
       interval = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            setIsTimerRunning(false);
-            setGameState('ended');
-            return 0;
+        setGameData(prev => {
+          if (prev.timer.timeLeft <= 1) {
+            return {
+              ...prev,
+              gameState: 'ended',
+              timer: { ...prev.timer, timeLeft: 0, isTimerRunning: false }
+            };
           }
-          return prev - 1;
+          return {
+            ...prev,
+            timer: { ...prev.timer, timeLeft: prev.timer.timeLeft - 1 }
+          };
         });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isTimerRunning, timeLeft]);
+  }, [gameData.timer.isTimerRunning, gameData.timer.timeLeft]);
 
   const goToNames = () => {
-    if (playerNames.length !== numPlayers) {
-      setPlayerNames(Array(numPlayers).fill(''));
-    }
-    setGameState('names');
+    setGameData(prev => {
+      const newPlayerNames = prev.game.playerNames.length !== prev.config.numPlayers
+        ? Array(prev.config.numPlayers).fill('')
+        : prev.game.playerNames;
+      return {
+        ...prev,
+        gameState: 'names',
+        game: { ...prev.game, playerNames: newPlayerNames }
+      };
+    });
   };
 
   const startGame = () => {
-    // @ts-ignore
-    const palabras: string[] = categorias[selectedCategory].palabras;
-    const word = palabras[Math.floor(Math.random() * palabras.length)];
-    setSecretWord(word);
+    setGameData(prev => {
+      // @ts-ignore
+      const palabras: string[] = categorias[prev.config.selectedCategory].palabras;
+      const word = palabras[Math.floor(Math.random() * palabras.length)];
 
-    const playerRoles = Array(numPlayers).fill(false);
-    const impostorIndices: number[] = [];
+      const playerRoles = Array(prev.config.numPlayers).fill(false);
+      const impostorIndices: number[] = [];
 
-    while (impostorIndices.length < numImpostors) {
-      const idx = Math.floor(Math.random() * numPlayers);
-      if (!impostorIndices.includes(idx)) {
-        impostorIndices.push(idx);
-        playerRoles[idx] = true;
+      while (impostorIndices.length < prev.config.numImpostors) {
+        const idx = Math.floor(Math.random() * prev.config.numPlayers);
+        if (!impostorIndices.includes(idx)) {
+          impostorIndices.push(idx);
+          playerRoles[idx] = true;
+        }
       }
-    }
 
-    setPlayers(playerRoles.map((isImpostor, idx) => ({
-      isImpostor,
-      name: playerNames[idx] || `Jugador ${idx + 1}`
-    })));
-    setGameState('reveal');
-    setCurrentPlayer(0);
-    setShowRole(false);
-    setTimeLeft(timeLimit);
+      const players = playerRoles.map((isImpostor, idx) => ({
+        isImpostor,
+        name: prev.game.playerNames[idx] || `Jugador ${idx + 1}`
+      }));
+
+      return {
+        ...prev,
+        gameState: 'reveal',
+        game: {
+          ...prev.game,
+          secretWord: word,
+          players,
+          currentPlayer: 0,
+          showRole: false
+        },
+        timer: {
+          ...prev.timer,
+          timeLeft: prev.config.timeLimit
+        }
+      };
+    });
   };
 
   const updatePlayerName = (index: number, name: string) => {
-    const newNames = [...playerNames];
-    newNames[index] = name;
-    setPlayerNames(newNames);
+    setGameData(prev => {
+      const newNames = [...prev.game.playerNames];
+      newNames[index] = name;
+      return {
+        ...prev,
+        game: { ...prev.game, playerNames: newNames }
+      };
+    });
   };
 
   const nextPlayer = () => {
-    if (currentPlayer < numPlayers - 1) {
-      setCurrentPlayer(currentPlayer + 1);
-      setShowRole(false);
-    } else {
-      const shuffled = [...players].sort(() => Math.random() - 0.5);
-      setPlayingOrder(shuffled);
-      setGameState('playing');
-      setIsTimerRunning(true);
-    }
+    setGameData(prev => {
+      if (prev.game.currentPlayer < prev.config.numPlayers - 1) {
+        return {
+          ...prev,
+          game: {
+            ...prev.game,
+            currentPlayer: prev.game.currentPlayer + 1,
+            showRole: false
+          }
+        };
+      } else {
+        const shuffled = [...prev.game.players].sort(() => Math.random() - 0.5);
+        return {
+          ...prev,
+          gameState: 'playing',
+          game: {
+            ...prev.game,
+            playingOrder: shuffled
+          },
+          timer: {
+            ...prev.timer,
+            isTimerRunning: true
+          }
+        };
+      }
+    });
   };
 
   const resetGame = () => {
-    setGameState('setup');
-    setCurrentPlayer(0);
-    setShowRole(false);
-    setPlayers([]);
-    setSecretWord('');
-    setTimeLeft(timeLimit);
-    setIsTimerRunning(false);
+    setGameData(prev => ({
+      ...initialGameData,
+      config: prev.config, // Mantener la configuración actual
+      timer: { ...initialGameData.timer, timeLeft: prev.config.timeLimit }
+    }));
   };
 
   const formatTime = (seconds: number) => {
@@ -117,76 +193,98 @@ export default function LocalGame() {
 
   const handleBack = () => {
     router.back();
-    return
-    setGameState('setup');
-    setCurrentPlayer(0);
-    setShowRole(false);
-    setPlayers([]);
-    setSecretWord('');
-    setTimeLeft(timeLimit);
-    setIsTimerRunning(false);
   };
 
   return (
     <div className="text-center space-y-8 w-full min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
-      {gameState === 'setup' && (
-        <SetupState
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          numPlayers={numPlayers}
-          setNumPlayers={setNumPlayers}
-          numImpostors={numImpostors}
-          setNumImpostors={setNumImpostors}
-          timeLimit={timeLimit}
-          setTimeLimit={setTimeLimit}
-          onBack={handleBack}
-          onContinue={goToNames}
-        />
-      )}
+        {gameData.gameState === 'setup' && (
+          <SetupState
+            selectedCategory={gameData.config.selectedCategory}
+            setSelectedCategory={(category) => {
+              setGameData(prev => ({
+                ...prev,
+                config: { ...prev.config, selectedCategory: category }
+              }));
+            }}
+            numPlayers={gameData.config.numPlayers}
+            setNumPlayers={(num) => {
+              setGameData(prev => ({
+                ...prev,
+                config: { ...prev.config, numPlayers: num }
+              }));
+            }}
+            numImpostors={gameData.config.numImpostors}
+            setNumImpostors={(num) => {
+              setGameData(prev => ({
+                ...prev,
+                config: { ...prev.config, numImpostors: num }
+              }));
+            }}
+            timeLimit={gameData.config.timeLimit}
+            setTimeLimit={(time) => {
+              setGameData(prev => ({
+                ...prev,
+                config: { ...prev.config, timeLimit: time }
+              }));
+            }}
+            onBack={handleBack}
+            onContinue={goToNames}
+          />
+        )}
 
-      {gameState === 'names' && (
-        <NamesState
-          numPlayers={numPlayers}
-          playerNames={playerNames}
-          updatePlayerName={updatePlayerName}
-          onBack={() => setGameState('setup')}
-          onStartGame={startGame}
-        />
-      )}
+        {gameData.gameState === 'names' && (
+          <NamesState
+            numPlayers={gameData.config.numPlayers}
+            playerNames={gameData.game.playerNames}
+            updatePlayerName={updatePlayerName}
+            onBack={() => setGameData(prev => ({ ...prev, gameState: 'setup' }))}
+            onStartGame={startGame}
+          />
+        )}
 
-      {gameState === 'reveal' && (
-        <RevealState
-          players={players}
-          currentPlayer={currentPlayer}
-          showRole={showRole}
-          setShowRole={setShowRole}
-          secretWord={secretWord}
-          numPlayers={numPlayers}
-          onNextPlayer={nextPlayer}
-        />
-      )}
+        {gameData.gameState === 'reveal' && (
+          <RevealState
+            players={gameData.game.players}
+            currentPlayer={gameData.game.currentPlayer}
+            showRole={gameData.game.showRole}
+            setShowRole={(show) => {
+              setGameData(prev => ({
+                ...prev,
+                game: { ...prev.game, showRole: show }
+              }));
+            }}
+            secretWord={gameData.game.secretWord}
+            numPlayers={gameData.config.numPlayers}
+            onNextPlayer={nextPlayer}
+          />
+        )}
 
-      {gameState === 'playing' && (
-        <PlayingState
-          selectedCategory={selectedCategory}
-          timeLeft={timeLeft}
-          formatTime={formatTime}
-          playingOrder={playingOrder}
-          isTimerRunning={isTimerRunning}
-          setIsTimerRunning={setIsTimerRunning}
-          onEndGame={() => setGameState('ended')}
-          onResetGame={resetGame}
-        />
-      )}
+        {gameData.gameState === 'playing' && (
+          <PlayingState
+            selectedCategory={gameData.config.selectedCategory}
+            timeLeft={gameData.timer.timeLeft}
+            formatTime={formatTime}
+            playingOrder={gameData.game.playingOrder}
+            isTimerRunning={gameData.timer.isTimerRunning}
+            setIsTimerRunning={(running) => {
+              setGameData(prev => ({
+                ...prev,
+                timer: { ...prev.timer, isTimerRunning: running }
+              }));
+            }}
+            onEndGame={() => setGameData(prev => ({ ...prev, gameState: 'ended' }))}
+            onResetGame={resetGame}
+          />
+        )}
 
-      {gameState === 'ended' && (
-        <EndedState
-          secretWord={secretWord}
-          players={players}
-          onResetGame={resetGame}
-        />
-      )}</div>
+        {gameData.gameState === 'ended' && (
+          <EndedState
+            secretWord={gameData.game.secretWord}
+            players={gameData.game.players}
+            onResetGame={resetGame}
+          />
+        )}</div>
     </div>
   );
 }
