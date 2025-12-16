@@ -84,6 +84,43 @@ export default function LocalGame() {
     return () => clearInterval(interval);
   }, [gameData.timer.isTimerRunning, gameData.timer.timeLeft]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    console.log(gameData);
+
+    if (name === 'selectedCategory') {
+      setGameData(prev => ({
+        ...prev,
+        config: {
+          ...prev.config,
+          [name]: value
+        }
+      }));
+    } 
+    
+    if (name.startsWith('playerName-')) {
+      const index = parseInt(name.split('-')[1]);
+      setGameData(prev => ({
+        ...prev,
+        game: {
+          ...prev.game,
+          playerNames: prev.game.playerNames.map((name, i) => i === index ? value : name)
+        }
+      }));
+    }
+    
+    else {
+      setGameData(prev => ({
+        ...prev,
+        config: {
+          ...prev.config,
+          [name]: parseInt(value)
+        }
+      }));
+    }
+  };
+
   const goToNames = () => {
     setGameData(prev => {
       const newPlayerNames = prev.game.playerNames.length !== prev.config.numPlayers
@@ -200,34 +237,8 @@ export default function LocalGame() {
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
         {gameData.gameState === 'setup' && (
           <SetupState
-            selectedCategory={gameData.config.selectedCategory}
-            setSelectedCategory={(category) => {
-              setGameData(prev => ({
-                ...prev,
-                config: { ...prev.config, selectedCategory: category }
-              }));
-            }}
-            numPlayers={gameData.config.numPlayers}
-            setNumPlayers={(num) => {
-              setGameData(prev => ({
-                ...prev,
-                config: { ...prev.config, numPlayers: num }
-              }));
-            }}
-            numImpostors={gameData.config.numImpostors}
-            setNumImpostors={(num) => {
-              setGameData(prev => ({
-                ...prev,
-                config: { ...prev.config, numImpostors: num }
-              }));
-            }}
-            timeLimit={gameData.config.timeLimit}
-            setTimeLimit={(time) => {
-              setGameData(prev => ({
-                ...prev,
-                config: { ...prev.config, timeLimit: time }
-              }));
-            }}
+            config={gameData.config}
+            handleChange={handleChange}
             onBack={handleBack}
             onContinue={goToNames}
           />
@@ -235,9 +246,8 @@ export default function LocalGame() {
 
         {gameData.gameState === 'names' && (
           <NamesState
-            numPlayers={gameData.config.numPlayers}
-            playerNames={gameData.game.playerNames}
-            updatePlayerName={updatePlayerName}
+            gameData={gameData}
+            handleChange={handleChange}
             onBack={() => setGameData(prev => ({ ...prev, gameState: 'setup' }))}
             onStartGame={startGame}
           />
@@ -245,28 +255,21 @@ export default function LocalGame() {
 
         {gameData.gameState === 'reveal' && (
           <RevealState
-            players={gameData.game.players}
-            currentPlayer={gameData.game.currentPlayer}
-            showRole={gameData.game.showRole}
+            gameData={gameData}
             setShowRole={(show) => {
               setGameData(prev => ({
                 ...prev,
                 game: { ...prev.game, showRole: show }
               }));
             }}
-            secretWord={gameData.game.secretWord}
-            numPlayers={gameData.config.numPlayers}
             onNextPlayer={nextPlayer}
           />
         )}
 
         {gameData.gameState === 'playing' && (
           <PlayingState
-            selectedCategory={gameData.config.selectedCategory}
-            timeLeft={gameData.timer.timeLeft}
+            gameData={gameData}
             formatTime={formatTime}
-            playingOrder={gameData.game.playingOrder}
-            isTimerRunning={gameData.timer.isTimerRunning}
             setIsTimerRunning={(running) => {
               setGameData(prev => ({
                 ...prev,

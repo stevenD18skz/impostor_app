@@ -6,22 +6,16 @@ interface Player {
 }
 
 interface PlayingStateProps {
-    selectedCategory: string;
-    timeLeft: number;
+    gameData: any;
     formatTime: (seconds: number) => string;
-    playingOrder: Player[];
-    isTimerRunning: boolean;
     setIsTimerRunning: (running: boolean) => void;
     onEndGame: () => void;
     onResetGame: () => void;
 }
 
 export default function PlayingState({
-    selectedCategory,
-    timeLeft,
+    gameData,
     formatTime,
-    playingOrder,
-    isTimerRunning,
     setIsTimerRunning,
     onEndGame,
     onResetGame
@@ -29,19 +23,19 @@ export default function PlayingState({
     return (
         <div className="text-center space-y-4">
             <h2 className="text-4xl font-bold text-white">🎮 ¡Juego en Curso!</h2>
-            <h3 className="text-4xl font-bold text-white">🧪 La categoria es {selectedCategory} 🧪</h3>
+            <h3 className="text-4xl font-bold text-white">🧪 La categoria es {gameData.config.selectedCategory} 🧪</h3>
 
             <div className="bg-indigo-500/30 border-2 border-blue-400 rounded-3xl p-4">
                 <p className="text-white text-lg mb-2">Tiempo Restante</p>
-                <p className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
-                    {formatTime(timeLeft)}
+                <p className={`text-7xl font-bold ${gameData.timer.timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+                    {formatTime(gameData.timer.timeLeft)}
                 </p>
             </div>
 
             <div className="bg-white/10 rounded-2xl p-6 space-y-4">
                 <p className="text-white text-xl font-bold mb-4">📋 Orden de Turnos:</p>
                 <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto">
-                    {playingOrder.map((player, idx) => (
+                    {gameData.game.playingOrder.map((player, idx) => (
                         <div
                             key={idx}
                             className="bg-white/10 rounded-lg p-3 border border-white/20"
@@ -64,10 +58,10 @@ export default function PlayingState({
 
             <div className="flex gap-4">
                 <button
-                    onClick={() => setIsTimerRunning(!isTimerRunning)}
+                    onClick={() => setIsTimerRunning(!gameData.timer.isTimerRunning)}
                     className="flex-1 bg-yellow-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-yellow-600 transition-all"
                 >
-                    {isTimerRunning ? '⏸️ Pausar' : '▶️ Reanudar'}
+                    {gameData.timer.isTimerRunning ? '⏸️ Pausar' : '▶️ Reanudar'}
                 </button>
 
                 <button
