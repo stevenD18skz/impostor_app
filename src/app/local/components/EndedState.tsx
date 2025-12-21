@@ -31,8 +31,8 @@ export default function EndedState({
                 <p className="mb-0 text-(--color-secondary) text-2xl">El impostor era</p>
                 <p className="text-pink-500 text-5xl font-bold">{players.find(p => p.isImpostor)?.name}</p>
 
-                <div className="mt-6 pt-6 border-t border-white/20">
-                    <p className="text-xl text-purple-200">
+                <div className="pt-2 border-t border-white/20">
+                    <p className="text-lg text-(--color-detail)">
                         ¿Adivinaron quién era el impostor? 🤔
                     </p>
                 </div>

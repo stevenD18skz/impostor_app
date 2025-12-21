@@ -70,8 +70,8 @@ export default function RevealState({
 
                         {player.isImpostor && (
                             <div className="bg-white/20 rounded-xl p-6 space-y-4">
-                                <p className="text-(--color-secondary) text-2xl flex items-center justify-center gap-2 mb-0">
-                                    <Lightbulb size={32} className="text-amber-500" />
+                                <p className="text-(--color-secondary) text-2xl flex items-center justify-center mb-0">
+                                    <Lightbulb size={32} strokeWidth={3} className="text-amber-500" />
                                     La categoría es 
                                 </p>
                                 <p><strong className="text-pink-500 text-4xl">{gameData.config.selectedCategory}</strong></p>

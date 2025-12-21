@@ -56,10 +56,10 @@ export default function PlayingState({
                     </div>
                 </div>
                 
-                <div className="p-4 rounded-2xl space-y-2 bg-white/10 text-(--color-primary) overflow-hidden">
+                <div className="p-4 rounded-2xl bg-white/10 text-(--color-primary) overflow-hidden">
                     <button
                         onClick={() => setShowInstructions(!showInstructions)}
-                        className="flex items-center justify-between w-full px-6 py-4 rounded-lg hover:bg-white/5 transition-all duration-300"
+                        className="flex items-center justify-between w-full px-6 py-2 rounded-lg hover:bg-white/5 transition-all duration-300"
                     >
                         <div className="flex items-center gap-2">
                             <BookOpenText size={32} strokeWidth={2}/>
@@ -68,8 +68,8 @@ export default function PlayingState({
                         <ChevronDown size={32} strokeWidth={3} className={` transition-transform duration-300 ${showInstructions ? 'rotate-180' : ''}`} />
                     </button>
 
-                    <div className={`overflow-hidden transition-all duration-300 ${showInstructions ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                        <div className="px-6 pb-4">
+                    <div className={`overflow-hidden transition-all ease-in duration-300 ${showInstructions ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="px-6">
                             <ul className="space-y-2 text-lg text-left text-(--color-detail)">
                                 <li>• Los inocentes deben hablar sobre la palabra indirectamente</li>
                                 <li>• El impostor debe intentar adivinar la palabra y actuar natural</li>
