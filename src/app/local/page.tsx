@@ -8,7 +8,7 @@ import RevealState from '@/app/local/components/RevealState';
 import PlayingState from '@/app/local/components/PlayingState';
 import EndedState from '@/app/local/components/EndedState';
 import { useRouter } from 'next/navigation';
-import { GameData } from '@/app/local/types/local';
+import { GameData } from '@/app/types/local';
 
 const initialGameData: GameData = {
   gameState: 'setup',

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { BookOpenText, Crown, Gamepad2, GamepadDirectional, ListOrdered, MessageSquareText, Pause, Play, RotateCcw, ChevronDown, OctagonPause } from 'lucide-react';
-import { GameData } from '@/app/local/types/local';
+import { BookOpenText, Crown, Gamepad2, GamepadDirectional, ListOrdered, Play, RotateCcw, ChevronDown, OctagonPause } from 'lucide-react';
+import { GameData } from '@/app/types/local';
 
 interface PlayingStateProps {
     gameData: GameData;
@@ -55,14 +55,14 @@ export default function PlayingState({
                         ))}
                     </div>
                 </div>
-                
+
                 <div className="p-4 rounded-2xl bg-white/10 text-(--color-primary) overflow-hidden">
                     <button
                         onClick={() => setShowInstructions(!showInstructions)}
                         className="flex items-center justify-between w-full px-6 py-2 rounded-lg hover:bg-white/5 transition-all duration-300"
                     >
                         <div className="flex items-center gap-2">
-                            <BookOpenText size={32} strokeWidth={2}/>
+                            <BookOpenText size={32} strokeWidth={2} />
                             <span className="text-2xl font-bold">Instrucciones</span>
                         </div>
                         <ChevronDown size={32} strokeWidth={3} className={` transition-transform duration-300 ${showInstructions ? 'rotate-180' : ''}`} />
