@@ -1,5 +1,6 @@
-import { ArrowLeft, Clock, Minus, Plus, Play, Target, UserRoundX, Users } from 'lucide-react';
+import { ArrowLeft, Clock, Minus, Plus, Play, Target, UserRoundX, Users, WifiOff, ChartBarStacked, HatGlasses } from 'lucide-react';
 import { categorias } from '@/app/lib/data';
+import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
 
 import "./styleLocal.css"
 
@@ -34,14 +35,20 @@ export default function SetupState({
     return (
         <div className="text-center space-y-4">
             <div>
-                <h1 className="text-5xl font-bold text-white mb-2">🕵️ EL IMPOSTOR</h1>
-                <p className="text-purple-200 text-lg">Modo Local</p>
+                <h1 className="text-5xl font-bold mb-2 text-amber-500">
+                    <HatGlasses size={64} className="inline mr-2 mb-1" />
+                    EL IMPOSTOR
+                </h1>
+                <p className="flex items-center justify-center gap-1 text-purple-200 text-lg"> 
+                    <WifiOff />
+                    Modo Local
+                </p>
             </div>
 
             <div className="space-y-4">
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
                     <label className="block text-white text-lg font-semibold mb-3">
-                        <Target className="inline mr-2 mb-1 text-blue-500" size={24} />
+                        <ChartBarStacked  className="inline mr-2 mb-1" size={24} />
                         Categoría
                     </label>
                     <select
@@ -61,7 +68,7 @@ export default function SetupState({
 
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
                     <label className="block text-white text-lg font-semibold mb-3">
-                        <Users className="inline mr-2 mb-1 text-amber-500" size={24} />
+                        <Users strokeWidth={3} className="inline mr-2 mb-1" size={24} />
                         Número de Jugadores
                     </label>
                     <div className="number-input-wrapper">
@@ -95,7 +102,7 @@ export default function SetupState({
 
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
                     <label className="block text-white text-lg font-semibold mb-3">
-                        <UserRoundX className="inline mr-2 mb-1 text-red-500" size={24} />
+                        <UserRoundX strokeWidth={3} className="inline mr-2 mb-1" size={24} />
                         Número de Impostores
                     </label>
                     <div className="number-input-wrapper">
@@ -105,7 +112,7 @@ export default function SetupState({
                             disabled={config.numImpostors <= 1}
                             className="number-input-btn"
                         >
-                            <Minus size={20} />
+                            <Minus  size={20} />
                         </button>
                         <input
                             name="numImpostors"
@@ -129,7 +136,7 @@ export default function SetupState({
 
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
                     <label className="block text-white text-lg font-semibold mb-3">
-                        <Clock className="inline mr-2 mb-1 text-blue-500" size={24} />
+                        <Clock strokeWidth={3} className="inline mr-2 mb-1" size={24} />
                         Tiempo del Juego (segundos)
                     </label>
                     <div className="number-input-wrapper">
@@ -164,20 +171,8 @@ export default function SetupState({
             </div>
 
             <div className="flex gap-4">
-                <button
-                    onClick={onBack}
-                    className="flex-1 bg-gray-600 text-white font-bold py-4 px-8 rounded-xl text-xl hover:bg-gray-700 transition-all shadow-lg"
-                >
-                    <ArrowLeft className="inline mr-2 mb-1" size={24} />
-                    Volver
-                </button>
-                <button
-                    onClick={onContinue}
-                    className="flex-1 bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
-                >
-                    <Play className="inline mr-2 mb-1" size={24} />
-                    Continuar
-                </button>
+                <ButtonsGeneral type="back" onBack={onBack} onContinue={onContinue} />
+                <ButtonsGeneral type="continue" onBack={onBack} onContinue={onContinue} />
             </div>
         </div>
     );

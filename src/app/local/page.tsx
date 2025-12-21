@@ -8,33 +8,7 @@ import RevealState from '@/app/local/components/RevealState';
 import PlayingState from '@/app/local/components/PlayingState';
 import EndedState from '@/app/local/components/EndedState';
 import { useRouter } from 'next/navigation';
-
-interface Player {
-  isImpostor: boolean;
-  name: string;
-}
-
-interface GameData {
-  gameState: 'setup' | 'names' | 'reveal' | 'playing' | 'ended';
-  config: {
-    numPlayers: number;
-    numImpostors: number;
-    selectedCategory: string;
-    timeLimit: number;
-  };
-  game: {
-    players: Player[];
-    playerNames: string[];
-    secretWord: string;
-    playingOrder: Player[];
-    currentPlayer: number;
-    showRole: boolean;
-  };
-  timer: {
-    timeLeft: number;
-    isTimerRunning: boolean;
-  };
-}
+import { Player, GameData } from '@/app/local/types/local';
 
 const initialGameData: GameData = {
   gameState: 'setup',
@@ -87,8 +61,6 @@ export default function LocalGame() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
 
-    console.log(gameData);
-
     if (name === 'selectedCategory') {
       setGameData(prev => ({
         ...prev,
@@ -97,9 +69,8 @@ export default function LocalGame() {
           [name]: value
         }
       }));
-    } 
-    
-    if (name.startsWith('playerName-')) {
+    }
+    else if (name.startsWith('playerName-')) {
       const index = parseInt(name.split('-')[1]);
       setGameData(prev => ({
         ...prev,
@@ -109,7 +80,6 @@ export default function LocalGame() {
         }
       }));
     }
-    
     else {
       setGameData(prev => ({
         ...prev,
@@ -232,6 +202,32 @@ export default function LocalGame() {
     router.back();
   };
 
+  const handleShowRole = () => {
+    setGameData(prev => ({
+      ...prev,
+      game: {
+        ...prev.game,
+        showRole: true
+      }
+    }));
+  };
+
+  const handleTimerRunning = (running: boolean) => {
+    setGameData(prev => ({
+      ...prev,
+      timer: { ...prev.timer, isTimerRunning: running }
+    }));
+  };
+
+  const handleEndGame = () => {
+    setGameData(prev => ({
+      ...prev,
+      gameState: 'ended'
+    }));
+  };
+
+
+
   return (
     <div className="text-center space-y-8 w-full min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
@@ -256,12 +252,7 @@ export default function LocalGame() {
         {gameData.gameState === 'reveal' && (
           <RevealState
             gameData={gameData}
-            setShowRole={(show) => {
-              setGameData(prev => ({
-                ...prev,
-                game: { ...prev.game, showRole: show }
-              }));
-            }}
+            setShowRole={handleShowRole}
             onNextPlayer={nextPlayer}
           />
         )}
@@ -270,13 +261,8 @@ export default function LocalGame() {
           <PlayingState
             gameData={gameData}
             formatTime={formatTime}
-            setIsTimerRunning={(running) => {
-              setGameData(prev => ({
-                ...prev,
-                timer: { ...prev.timer, isTimerRunning: running }
-              }));
-            }}
-            onEndGame={() => setGameData(prev => ({ ...prev, gameState: 'ended' }))}
+            setIsTimerRunning={handleTimerRunning}
+            onEndGame={handleEndGame}
             onResetGame={resetGame}
           />
         )}
