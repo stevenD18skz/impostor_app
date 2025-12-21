@@ -1,90 +1,114 @@
-import { RotateCcw } from 'lucide-react';
-
-interface Player {
-    isImpostor: boolean;
-    name: string;
-}
+import { useState } from 'react';
+import { BookOpenText, Crown, Gamepad2, GamepadDirectional, ListOrdered, Play, RotateCcw, ChevronDown, OctagonPause } from 'lucide-react';
+import { GameData } from '@/app/types/local';
 
 interface PlayingStateProps {
-    selectedCategory: string;
-    timeLeft: number;
+    gameData: GameData;
     formatTime: (seconds: number) => string;
-    playingOrder: Player[];
-    isTimerRunning: boolean;
     setIsTimerRunning: (running: boolean) => void;
     onEndGame: () => void;
     onResetGame: () => void;
 }
 
 export default function PlayingState({
-    selectedCategory,
-    timeLeft,
+    gameData,
     formatTime,
-    playingOrder,
-    isTimerRunning,
     setIsTimerRunning,
     onEndGame,
     onResetGame
 }: PlayingStateProps) {
+    const [showInstructions, setShowInstructions] = useState(false);
+
     return (
-        <div className="text-center space-y-4">
-            <h2 className="text-4xl font-bold text-white">🎮 ¡Juego en Curso!</h2>
-            <h3 className="text-4xl font-bold text-white">🧪 La categoria es {selectedCategory} 🧪</h3>
+        <div className="text-center space-y-6 text-(--color-main)">
+            <header>
+                <h2 className="text-5xl font-bold flex items-center justify-center gap-2">
+                    <GamepadDirectional size={48} strokeWidth={3} />
+                    <strong>¡Juego en Curso!</strong>
+                    <Gamepad2 size={48} strokeWidth={3} />
+                </h2>
+            </header>
 
-            <div className="bg-indigo-500/30 border-2 border-blue-400 rounded-3xl p-4">
-                <p className="text-white text-lg mb-2">Tiempo Restante</p>
-                <p className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
-                    {formatTime(timeLeft)}
-                </p>
-            </div>
-
-            <div className="bg-white/10 rounded-2xl p-6 space-y-4">
-                <p className="text-white text-xl font-bold mb-4">📋 Orden de Turnos:</p>
-                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto">
-                    {playingOrder.map((player, idx) => (
-                        <div
-                            key={idx}
-                            className="bg-white/10 rounded-lg p-3 border border-white/20"
-                        >
-                            <span className="text-purple-300 font-semibold">{idx + 1}.</span>
-                            <span className="text-white ml-2">{player.name}</span>
-                        </div>
-                    ))}
+            <main className="space-y-4">
+                <div className="p-4 rounded-2xl bg-white/10">
+                    <p className="text-xl font-bold text-(--color-primary) ">Tiempo Restante</p>
+                    <p className={`text-7xl font-bold ${gameData.timer.timeLeft <= 30 ? 'text-pink-600 animate-pulse' : 'text-(--color-secondary)'}`}>
+                        {formatTime(gameData.timer.timeLeft)}
+                    </p>
                 </div>
-            </div>
 
-            <div className="bg-white/10 rounded-2xl px-6 py-4 space-y-4">
-                <p className="text-white text-lg">📋 Instrucciones:</p>
-                <ul className="text-purple-200 text-left space-y-2">
-                    <li>• Los inocentes deben hablar sobre la palabra sin decirla directamente</li>
-                    <li>• El impostor debe intentar adivinar la palabra y actuar natural</li>
-                    <li>• Al final, voten por quién creen que es el impostor</li>
-                </ul>
-            </div>
+                <div className="p-4 rounded-2xl bg-white/10">
+                    <p className="flex items-center justify-center gap-2 mb-4 text-xl font-bold text-(--color-primary) ">
+                        <ListOrdered size={32} strokeWidth={2} />
+                        Orden de Turnos
+                    </p>
 
-            <div className="flex gap-4">
+                    <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto text-xl custom-scrollbar">
+                        {gameData.game.playingOrder.map((player, idx) => (
+                            <div
+                                key={idx}
+                                className="p-3 rounded-lg bg-white/10 text-xl"
+                            >
+                                <span className="font-semibold text-(--color-primary)">{idx + 1}.</span>
+                                <strong className="text-(--color-secondary) ml-2">{player.name}</strong>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white/10 text-(--color-primary) overflow-hidden">
+                    <button
+                        onClick={() => setShowInstructions(!showInstructions)}
+                        className="flex items-center justify-between w-full px-6 py-2 rounded-lg hover:bg-white/5 transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-2">
+                            <BookOpenText size={32} strokeWidth={2} />
+                            <span className="text-2xl font-bold">Instrucciones</span>
+                        </div>
+                        <ChevronDown size={32} strokeWidth={3} className={` transition-transform duration-300 ${showInstructions ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <div className={`overflow-hidden transition-all ease-in duration-300 ${showInstructions ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="px-6">
+                            <ul className="space-y-2 text-lg text-left text-(--color-detail)">
+                                <li>• Los inocentes deben hablar sobre la palabra indirectamente</li>
+                                <li>• El impostor debe intentar adivinar la palabra y actuar natural</li>
+                                <li>• Al final, voten por quién creen que es el impostor</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+
+            <footer className="flex flex-col gap-4">
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => setIsTimerRunning(!gameData.timer.isTimerRunning)}
+                        className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl bg-cyan-600 text-xl text-(--color-secondary) font-bold hover:bg-cyan-700 transition-all duration-300"
+                    >
+                        {gameData.timer.isTimerRunning ? <OctagonPause size={32} strokeWidth={3} /> : <Play size={32} strokeWidth={3} />}
+                        {gameData.timer.isTimerRunning ? 'Pausar' : 'Reanudar'}
+                    </button>
+
+                    <button
+                        onClick={onEndGame}
+                        className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl bg-pink-600 text-xl text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300"
+                    >
+                        <Crown size={32} strokeWidth={3} />
+                        Terminar
+                    </button>
+                </div>
+
                 <button
-                    onClick={() => setIsTimerRunning(!isTimerRunning)}
-                    className="flex-1 bg-yellow-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-yellow-600 transition-all"
+                    onClick={onResetGame}
+                    className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl bg-slate-600 text-xl text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
                 >
-                    {isTimerRunning ? '⏸️ Pausar' : '▶️ Reanudar'}
+                    <RotateCcw size={32} strokeWidth={3} />
+                    Nueva Partida
                 </button>
 
-                <button
-                    onClick={onEndGame}
-                    className="flex-1 bg-blue-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-600 transition-all"
-                >
-                    🏁 Terminar
-                </button>
-            </div>
-
-            <button
-                onClick={onResetGame}
-                className="w-full bg-gray-700 text-white font-bold py-3 px-6 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all"
-            >
-                <RotateCcw className="inline mr-2 mb-1" size={20} />
-                Nueva Partida
-            </button>
+            </footer>
         </div>
     );
 }
