@@ -25,7 +25,6 @@ input[type="number"] {
     height: 48px;
     border-radius: 12px;
     background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
-    border: 2px solid rgba(255, 255, 255, 0.3);
     color: white;
     font-size: 1.5rem;
     font-weight: bold;

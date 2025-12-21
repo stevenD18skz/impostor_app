@@ -13,7 +13,7 @@ export default function ButtonsGeneral({
         return (
             <button
                     onClick={onBack}
-                    className="flex-1 bg-gray-600 text-white font-bold py-4 px-8 rounded-xl text-xl hover:bg-gray-700 transition-all shadow-lg"
+                    className="flex-1 bg-gray-600 text-slate-200 font-bold py-4 px-8 rounded-xl text-xl hover:bg-gray-700 transition-all duration-300 shadow-lg"
                 >
                     <ArrowLeft strokeWidth={4}   className="inline mr-2 mb-1" size={24} />
                     Volver
@@ -24,7 +24,7 @@ export default function ButtonsGeneral({
         return (
             <button
                     onClick={onContinue}
-                    className="flex-1 bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
+                    className="flex-1 bg-pink-500 text-slate-200 font-bold py-4 px-8 rounded-xl text-xl hover:bg-pink-700 transition-all duration-300 shadow-lg"
                 >
                     <Play strokeWidth={4} className="inline mr-2 mb-1" size={24} />
                     Continuar

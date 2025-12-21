@@ -34,12 +34,12 @@ export default function SetupState({
     };
     return (
         <div className="text-center space-y-4">
-            <div>
-                <h1 className="text-5xl font-bold mb-2 text-amber-500">
-                    <HatGlasses size={64} className="inline mr-2 mb-1" />
+            <div className='flex flex-col items-center'>
+                <h1 className="flex items-center gap-1 text-5xl font-bold text-amber-500">
+                    <HatGlasses size={64} className="inline mr-2" />
                     EL IMPOSTOR
                 </h1>
-                <p className="flex items-center justify-center gap-1 text-purple-200 text-lg"> 
+                <p className="flex items-center justify-center gap-1 text-lg text-purple-200"> 
                     <WifiOff />
                     Modo Local
                 </p>
@@ -47,7 +47,7 @@ export default function SetupState({
 
             <div className="space-y-4">
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
+                    <label className="block text-purple-400 text-lg font-semibold mb-3">
                         <ChartBarStacked  className="inline mr-2 mb-1" size={24} />
                         Categoría
                     </label>
@@ -67,7 +67,7 @@ export default function SetupState({
                 </div>
 
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
+                    <label className="block text-purple-400 text-lg font-semibold mb-3">
                         <Users strokeWidth={3} className="inline mr-2 mb-1" size={24} />
                         Número de Jugadores
                     </label>
@@ -101,7 +101,7 @@ export default function SetupState({
                 </div>
 
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
+                    <label className="block text-purple-400 text-lg font-semibold mb-3">
                         <UserRoundX strokeWidth={3} className="inline mr-2 mb-1" size={24} />
                         Número de Impostores
                     </label>
@@ -135,7 +135,7 @@ export default function SetupState({
                 </div>
 
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
+                    <label className="block text-purple-400 text-lg font-semibold mb-3">
                         <Clock strokeWidth={3} className="inline mr-2 mb-1" size={24} />
                         Tiempo del Juego (segundos)
                     </label>
