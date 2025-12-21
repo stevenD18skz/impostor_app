@@ -142,7 +142,7 @@ export default function Lobby({ room, player, settingsRoom, updateSettings, onSt
                 name="numImpostors"
                 value={settingsForms.numImpostors}
                 min={1}
-                max={Math.max(1, room.players.length - 1)}
+                max={Math.max(1, Math.floor(room.players.length / 2))}
                 onChange={(e) => updateSettingsForms({ ...settingsForms, numImpostors: parseInt(e.target.value) })}
                 onIncrement={handleIncrementImpostors}
                 onDecrement={handleDecrementImpostors}
@@ -185,10 +185,12 @@ export default function Lobby({ room, player, settingsRoom, updateSettings, onSt
         </div>
       </main>
 
-      <footer className="flex items-center justify-center gap-4">
+      <footer className={`flex items-center justify-center gap-4 
+          ${player.is_host ? 'flex-row' : 'flex-col'}
+        `}>
         <button
           onClick={onLeaveRoom}
-          className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl cursor-pointer text-xl bg-slate-600 text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
+          className="flex flex-1 items-center justify-center gap-1 py-4 px-8  rounded-xl cursor-pointer text-xl bg-slate-600 text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
           >
           <LogOut size={32} strokeWidth={3} />
           {loading.leaving ? 'Saliendo...' : 'Salir de la sala'}
@@ -198,7 +200,7 @@ export default function Lobby({ room, player, settingsRoom, updateSettings, onSt
           <button
             onClick={onStartGame}
             disabled={room.players.length < 3}
-            className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
+            className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl cursor-pointer text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
           >
             <Play size={32} strokeWidth={3} />
             {loading.starting ? 'Iniciando...' : 'Iniciar Partida'}
