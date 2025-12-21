@@ -12,23 +12,23 @@ export default function ButtonsGeneral({
     if (type === 'back') {
         return (
             <button
-                    onClick={onBack}
-                    className="flex-1 bg-gray-600 text-slate-200 font-bold py-4 px-8 rounded-xl text-xl hover:bg-gray-700 transition-all duration-300 shadow-lg"
-                >
-                    <ArrowLeft strokeWidth={4}   className="inline mr-2 mb-1" size={24} />
-                    Volver
-                </button>
+                onClick={onBack}
+                className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl text-xl bg-slate-600 text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
+            >
+                <ArrowLeft strokeWidth={4} className="inline" size={24} />
+                Volver
+            </button>
         );
     }
     else if (type === 'continue') {
         return (
             <button
-                    onClick={onContinue}
-                    className="flex-1 bg-pink-500 text-slate-200 font-bold py-4 px-8 rounded-xl text-xl hover:bg-pink-700 transition-all duration-300 shadow-lg"
-                >
-                    <Play strokeWidth={4} className="inline mr-2 mb-1" size={24} />
-                    Continuar
-                </button>
+                onClick={onContinue}
+                className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300"
+            >
+                <Play strokeWidth={4} className="inline" size={24} />
+                Continuar
+            </button>
         );
     }
 }

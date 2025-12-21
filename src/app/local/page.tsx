@@ -229,8 +229,8 @@ export default function LocalGame() {
 
 
   return (
-    <div className="text-center space-y-8 w-full min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
+    <div className="flex items-center justify-center space-y-8 text-center w-full min-h-screen p-4 bg-linear-to-br from-indigo-900 to-purple-900">
+      <div className="w-full max-w-2xl bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8">
         {gameData.gameState === 'setup' && (
           <SetupState
             config={gameData.config}

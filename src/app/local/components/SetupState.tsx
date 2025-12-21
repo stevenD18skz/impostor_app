@@ -1,6 +1,7 @@
-import { ArrowLeft, Clock, Minus, Plus, Play, Target, UserRoundX, Users, WifiOff, ChartBarStacked, HatGlasses } from 'lucide-react';
+import { LibraryBig, Clock, Users, WifiOff, Drama, HatGlasses } from 'lucide-react';
 import { categorias } from '@/app/lib/data';
 import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
+import NumberInput from '@/components/ui/NumberInput';
 
 import "./styleLocal.css"
 
@@ -35,11 +36,11 @@ export default function SetupState({
     return (
         <div className="text-center space-y-4">
             <div className='flex flex-col items-center'>
-                <h1 className="flex items-center gap-1 text-5xl font-bold text-amber-500">
+                <h1 className="flex items-center gap-1 text-5xl font-bold text-(--color-main)">
                     <HatGlasses size={64} className="inline mr-2" />
                     EL IMPOSTOR
                 </h1>
-                <p className="flex items-center justify-center gap-1 text-lg text-purple-200"> 
+                <p className="flex items-center justify-center gap-1 text-lg text-(--color-detail)">
                     <WifiOff />
                     Modo Local
                 </p>
@@ -47,18 +48,18 @@ export default function SetupState({
 
             <div className="space-y-4">
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-purple-400 text-lg font-semibold mb-3">
-                        <ChartBarStacked  className="inline mr-2 mb-1" size={24} />
+                    <label className="flex items-center justify-center gap-1 text-(--color-primary) text-xl font-semibold mb-3">
+                        <LibraryBig className="inline" size={24} />
                         Categoría
                     </label>
                     <select
                         name="selectedCategory"
                         value={config.selectedCategory}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 text-lg bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
+                        className="w-full px-4  py-3 text-xl bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
                     >
                         {Object.keys(categorias).map(key => (
-                            <option key={key} value={key} className="bg-gray-800">
+                            <option key={key} value={key} className="bg-slate-800">
                                 {/* @ts-ignore */}
                                 {categorias[key].nombre}
                             </option>
@@ -66,108 +67,42 @@ export default function SetupState({
                     </select>
                 </div>
 
-                <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-purple-400 text-lg font-semibold mb-3">
-                        <Users strokeWidth={3} className="inline mr-2 mb-1" size={24} />
-                        Número de Jugadores
-                    </label>
-                    <div className="number-input-wrapper">
-                        <button
-                            type="button"
-                            onClick={() => handleDecrement('numPlayers', 3)}
-                            disabled={config.numPlayers <= 3}
-                            className="number-input-btn"
-                        >
-                            <Minus size={20} />
-                        </button>
-                        <input
-                            name="numPlayers"
-                            type="number"
-                            min="3"
-                            max="12"
-                            value={config.numPlayers}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 text-2xl text-center bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => handleIncrement('numPlayers', 12)}
-                            disabled={config.numPlayers >= 12}
-                            className="number-input-btn"
-                        >
-                            <Plus size={20} />
-                        </button>
-                    </div>
-                </div>
+                <NumberInput
+                    label="Número de Jugadores"
+                    icon={Users}
+                    name="numPlayers"
+                    value={config.numPlayers}
+                    min={3}
+                    max={12}
+                    onChange={handleChange}
+                    onIncrement={() => handleIncrement('numPlayers', 12)}
+                    onDecrement={() => handleDecrement('numPlayers', 3)}
+                />
 
-                <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-purple-400 text-lg font-semibold mb-3">
-                        <UserRoundX strokeWidth={3} className="inline mr-2 mb-1" size={24} />
-                        Número de Impostores
-                    </label>
-                    <div className="number-input-wrapper">
-                        <button
-                            type="button"
-                            onClick={() => handleDecrement('numImpostors', 1)}
-                            disabled={config.numImpostors <= 1}
-                            className="number-input-btn"
-                        >
-                            <Minus  size={20} />
-                        </button>
-                        <input
-                            name="numImpostors"
-                            type="number"
-                            min="1"
-                            max={config.numPlayers / 2}
-                            value={config.numImpostors}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 text-2xl text-center bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => handleIncrement('numImpostors', Math.floor(config.numPlayers / 2))}
-                            disabled={config.numImpostors >= Math.floor(config.numPlayers / 2)}
-                            className="number-input-btn"
-                        >
-                            <Plus size={20} />
-                        </button>
-                    </div>
-                </div>
+                <NumberInput
+                    label="Número de Impostores"
+                    icon={Drama}
+                    name="numImpostors"
+                    value={config.numImpostors}
+                    min={1}
+                    max={Math.floor(config.numPlayers / 2)}
+                    onChange={handleChange}
+                    onIncrement={() => handleIncrement('numImpostors', Math.floor(config.numPlayers / 2))}
+                    onDecrement={() => handleDecrement('numImpostors', 1)}
+                />
 
-                <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-purple-400 text-lg font-semibold mb-3">
-                        <Clock strokeWidth={3} className="inline mr-2 mb-1" size={24} />
-                        Tiempo del Juego (segundos)
-                    </label>
-                    <div className="number-input-wrapper">
-                        <button
-                            type="button"
-                            onClick={() => handleDecrement('timeLimit', 60, 30)}
-                            disabled={config.timeLimit <= 60}
-                            className="number-input-btn"
-                        >
-                            <Minus size={20} />
-                        </button>
-                        <input
-                            name="timeLimit"
-                            type="number"
-                            min="60"
-                            max="600"
-                            step="30"
-                            value={config.timeLimit}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 text-2xl text-center bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => handleIncrement('timeLimit', 600, 30)}
-                            disabled={config.timeLimit >= 600}
-                            className="number-input-btn"
-                        >
-                            <Plus size={20} />
-                        </button>
-                    </div>
-                </div>
+                <NumberInput
+                    label="Tiempo del Juego (segundos)"
+                    icon={Clock}
+                    name="timeLimit"
+                    value={config.timeLimit}
+                    min={60}
+                    max={600}
+                    step={30}
+                    onChange={handleChange}
+                    onIncrement={() => handleIncrement('timeLimit', 600, 30)}
+                    onDecrement={() => handleDecrement('timeLimit', 60, 30)}
+                />
             </div>
 
             <div className="flex gap-4">

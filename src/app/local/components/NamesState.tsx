@@ -16,19 +16,19 @@ export default function NamesState({
     onStartGame
 }: NamesStateProps) {
     return (
-        <div className="text-center space-y-8">
-            <div className="text-white">
-                <h2 className="text-4xl font-bold">
-                    <UsersRound size={42} strokeWidth={3} className="inline mr-2 mb-1 text-amber-400" />
+        <div className="text-center space-y-6">
+            <div className="text-(--color-primary)">
+                <h2 className="flex items-center justify-center gap-2 text-4xl font-bold">
+                    <UsersRound size={42} strokeWidth={3} className="inline" />
                      Nombres de Jugadores
                 </h2>
-                <p className="text-lg">Ingresa el nombre de cada jugador</p>
+                <p className="text-lg text-(--color-detail)">Ingresa el nombre de cada jugador</p>
             </div>
 
-            <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+            <div className="space-y-4 max-h-100 overflow-y-auto custom-scrollbar">
                 {Array(gameData.config.numPlayers).fill(0).map((_, idx) => (
                     <div key={idx} className="bg-white/10 rounded-xl p-4 backdrop-blur">
-                        <label className="block text-purple-400 text-lg font-semibold mb-2">
+                        <label className="block text-(--color-primary) text-xl font-semibold mb-2">
                             Jugador {idx + 1}
                         </label>
                         <input
@@ -38,7 +38,7 @@ export default function NamesState({
                             placeholder={`Jugador ${idx + 1}`}
                             value={gameData.game.playerNames[idx] || ''}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 text-lg bg-white/20 text-white placeholder-slate-300 rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
+                            className="w-full px-4 py-3 text-xl bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
                         />
                     </div>
                 ))}
