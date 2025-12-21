@@ -1,50 +1,65 @@
-import { Play, Users } from 'lucide-react';
+import { Book, Clock, Users, WifiOff, Drama, HatGlasses } from 'lucide-react';
 import { categorias } from '@/app/lib/data';
+import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
+import NumberInput from '@/components/ui/NumberInput';
+
+import "./styleLocal.css"
 
 interface SetupStateProps {
-    selectedCategory: string;
-    setSelectedCategory: (category: string) => void;
-    numPlayers: number;
-    setNumPlayers: (num: number) => void;
-    numImpostors: number;
-    setNumImpostors: (num: number) => void;
-    timeLimit: number;
-    setTimeLimit: (time: number) => void;
+    config: any;
+    handleChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => void;
     onBack: () => void;
     onContinue: () => void;
 }
 
 export default function SetupState({
-    selectedCategory,
-    setSelectedCategory,
-    numPlayers,
-    setNumPlayers,
-    numImpostors,
-    setNumImpostors,
-    timeLimit,
-    setTimeLimit,
+    config,
+    handleChange,
     onBack,
     onContinue
 }: SetupStateProps) {
-    return (
-        <div className="text-center space-y-4">
-            <div>
-                <h1 className="text-5xl font-bold text-white mb-2">🕵️ EL IMPOSTOR</h1>
-                <p className="text-purple-200 text-lg">Modo Local</p>
-            </div>
+    const handleIncrement = (field: string, max: number, step: number = 1) => {
+        const currentValue = config[field];
+        if (currentValue < max) {
+            const newValue = Math.min(currentValue + step, max);
+            handleChange({ target: { name: field, value: newValue.toString() } } as any);
+        }
+    };
 
-            <div className="space-y-4">
+    const handleDecrement = (field: string, min: number, step: number = 1) => {
+        const currentValue = config[field];
+        if (currentValue > min) {
+            const newValue = Math.max(currentValue - step, min);
+            handleChange({ target: { name: field, value: newValue.toString() } } as any);
+        }
+    };
+    return (
+        <div className="space-y-6">
+            <header className='flex flex-col items-center'>
+                <h1 className="flex items-center justify-center gap-1 text-(--color-main) text-5xl font-bold">
+                    <HatGlasses size={64}/>
+                    EL IMPOSTOR
+                </h1>
+                <p className="flex items-center justify-center gap-1 text-(--color-detail) text-lg">
+                    <WifiOff size={24}/>
+                    Modo Local
+                </p>
+            </header>
+
+            <main className="space-y-4">
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
-                        🎯 Categoría
+                    <label className="flex items-center justify-center gap-1 text-(--color-primary) text-2xl font-semibold mb-3">
+                        <Book size={24} strokeWidth={3}/>
+                        Categoría
                     </label>
                     <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full px-4 py-3 text-lg bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
-                    >
+                        name="selectedCategory"
+                        value={config.selectedCategory}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 text-2xl bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
+                >
                         {Object.keys(categorias).map(key => (
-                            <option key={key} value={key} className="bg-gray-800">
+                            <option key={key} value={key} className="bg-slate-800">
                                 {/* @ts-ignore */}
                                 {categorias[key].nombre}
                             </option>
@@ -52,70 +67,48 @@ export default function SetupState({
                     </select>
                 </div>
 
-                <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
-                        <Users className="inline mr-2 mb-1" size={24} />
-                        Número de Jugadores
-                    </label>
-                    <input
-                        type="number"
-                        min="3"
-                        max="12"
-                        value={numPlayers}
-                        onChange={(e) => {
-                            const val = parseInt(e.target.value);
-                            setNumPlayers(val);
-                            if (numImpostors >= val) setNumImpostors(Math.max(1, val - 1));
-                        }}
-                        className="w-full px-4 py-3 text-2xl text-center bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
-                    />
-                </div>
+                <NumberInput
+                    label="Número de Jugadores"
+                    icon={Users}
+                    name="numPlayers"
+                    value={config.numPlayers}
+                    min={3}
+                    max={12}
+                    onChange={handleChange}
+                    onIncrement={() => handleIncrement('numPlayers', 12)}
+                    onDecrement={() => handleDecrement('numPlayers', 3)}
+                />
 
-                <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
-                        👤 Número de Impostores
-                    </label>
-                    <input
-                        type="number"
-                        min="1"
-                        max={numPlayers - 1}
-                        value={numImpostors}
-                        onChange={(e) => setNumImpostors(parseInt(e.target.value))}
-                        className="w-full px-4 py-3 text-2xl text-center bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
-                    />
-                </div>
+                <NumberInput
+                    label="Número de Impostores"
+                    icon={Drama}
+                    name="numImpostors"
+                    value={config.numImpostors}
+                    min={1}
+                    max={Math.floor(config.numPlayers / 2)}
+                    onChange={handleChange}
+                    onIncrement={() => handleIncrement('numImpostors', Math.floor(config.numPlayers / 2))}
+                    onDecrement={() => handleDecrement('numImpostors', 1)}
+                />
 
-                <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="block text-white text-lg font-semibold mb-3">
-                        ⏱️ Tiempo del Juego (segundos)
-                    </label>
-                    <input
-                        type="number"
-                        min="60"
-                        max="600"
-                        step="30"
-                        value={timeLimit}
-                        onChange={(e) => setTimeLimit(parseInt(e.target.value))}
-                        className="w-full px-4 py-3 text-2xl text-center bg-white/20 text-white rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
-                    />
-                </div>
-            </div>
+                <NumberInput
+                    label="Tiempo del Juego (segundos)"
+                    icon={Clock}
+                    name="timeLimit"
+                    value={config.timeLimit}
+                    min={60}
+                    max={600}
+                    step={30}
+                    onChange={handleChange}
+                    onIncrement={() => handleIncrement('timeLimit', 600, 30)}
+                    onDecrement={() => handleDecrement('timeLimit', 60, 30)}
+                />
+            </main>
 
-            <div className="flex gap-4">
-                <button
-                    onClick={onBack}
-                    className="flex-1 bg-gray-600 text-white font-bold py-4 px-8 rounded-xl text-xl hover:bg-gray-700 transition-all shadow-lg"
-                >
-                    ← Volver
-                </button>
-                <button
-                    onClick={onContinue}
-                    className="flex-1 bg-pink-500 text-white font-bold py-4 px-8 rounded-xl text-xl hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all shadow-lg"
-                >
-                    <Play className="inline mr-2 mb-1" size={24} />
-                    Continuar
-                </button>
-            </div>
+            <footer className="flex gap-4">
+                <ButtonsGeneral type="back" onBack={onBack} onContinue={onContinue} />
+                <ButtonsGeneral type="continue" onBack={onBack} onContinue={onContinue} />
+            </footer>
         </div>
     );
 }
