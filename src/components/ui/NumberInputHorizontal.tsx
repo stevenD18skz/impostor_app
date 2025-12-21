@@ -1,9 +1,8 @@
 import { Minus, Plus, LucideIcon } from 'lucide-react';
 
-interface NumberInputProps {
+interface NumberInputHorizontalProps {
     label: string;
     icon: LucideIcon;
-    readOnly?: boolean;
     name: string;
     value: number;
     min: number;
@@ -15,27 +14,27 @@ interface NumberInputProps {
     disabled?: boolean;
 }
 
-export default function NumberInput({
+export default function NumberInputHorizontal({
     label,
     icon: Icon,
-    readOnly = false,
     name,
     value,
     min,
     max,
+    readOnly,
     step = 1,
     onChange,
     onIncrement,
     onDecrement,
     disabled = false
-}: NumberInputProps) {
+}: NumberInputHorizontalProps) {
     return (
-        <div className="rounded-2xl p-6 bg-white/10 backdrop-blur">
-            <label className="flex items-center justify-center gap-1 text-(--color-primary) text-2xl font-semibold mb-3">
-                <Icon strokeWidth={3} size={24} />
+        <div className="flex gap-2 rounded-2xl py-6 px-4 bg-white/10 backdrop-blur">
+            <label className="flex flex-1/3 items-center justify-center   text-(--color-primary) text-xl font-semibold">
                 {label}
             </label>
-            <div className="number-input-wrapper">
+
+            <div className="flex flex-2/3 number-input-wrapper">
                 <button
                     type="button"
                     onClick={onDecrement}
@@ -46,7 +45,6 @@ export default function NumberInput({
                 </button>
                 <input
                     name={name}
-                    readOnly={readOnly}
                     type="number"
                     min={min}
                     max={max}

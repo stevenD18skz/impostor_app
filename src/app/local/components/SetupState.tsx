@@ -56,7 +56,7 @@ export default function SetupState({
                         name="selectedCategory"
                         value={config.selectedCategory}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 text-2xl bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
+                        className="w-full px-4 py-3 text-2xl cursor-pointer hover:bg-white/30 bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
                 >
                         {Object.keys(categorias).map(key => (
                             <option key={key} value={key} className="bg-slate-800">

@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import GameSetup from '@/components/GameSetup';
-import Lobby from '@/components/Lobby';
-import RoleReveal from '@/components/RoleReveal';
-import GameRunning from '@/components/GameRunning';
-import GameEnd from '@/components/GameEnd';
+import GameSetup from '@/components/online/GameSetup';
+import Lobby from '@/components/online/Lobby';
+import RoleReveal from '@/components/online/RoleReveal';
+import GameRunning from '@/components/online/GameRunning';
+import GameEnd from '@/components/online/GameEnd';
 import { useRouter } from 'next/navigation';
 import { useRealtimeRoom } from '@/hooks/useRealtimeRoom';
 
@@ -286,8 +286,10 @@ export default function ImpostorGame() {
 
 
   return (
-    <div className="min-h-screen  bg-blue-900 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
+    <div className="flex items-center justify-center p-4 min-h-screen bg-linear-to-br from-purple-900 via-purple-900 to-indigo-900 text-center">
+      <div className={`bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full border border-white/20
+        ${room.game_state === 'setup' ? 'max-w-5xl' : 'max-w-2xl'} 
+        `}>
 
         {room.game_state === 'setup' && (
           <Lobby
@@ -305,7 +307,7 @@ export default function ImpostorGame() {
         {room.game_state === 'reveal' && (
           <RoleReveal
             player={myPlayer}
-            secretWord={room.game_data.secretWord}
+            gameData={room}
             onReady={confirmRole}
             playerHasReady={playerHasReady}
             loading={loading}
