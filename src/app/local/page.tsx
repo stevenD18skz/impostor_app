@@ -8,7 +8,7 @@ import RevealState from '@/app/local/components/RevealState';
 import PlayingState from '@/app/local/components/PlayingState';
 import EndedState from '@/app/local/components/EndedState';
 import { useRouter } from 'next/navigation';
-import { Player, GameData } from '@/app/local/types/local';
+import { GameData } from '@/app/local/types/local';
 
 const initialGameData: GameData = {
   gameState: 'setup',
@@ -226,6 +226,12 @@ export default function LocalGame() {
     }));
   };
 
+  const handleBackNames = () => {
+    setGameData(prev => ({
+      ...prev,
+      gameState: 'setup'
+    }));
+  };
 
 
   return (
@@ -244,7 +250,7 @@ export default function LocalGame() {
           <NamesState
             gameData={gameData}
             handleChange={handleChange}
-            onBack={() => setGameData(prev => ({ ...prev, gameState: 'setup' }))}
+            onBack={handleBackNames}
             onStartGame={startGame}
           />
         )}

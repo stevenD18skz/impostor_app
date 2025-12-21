@@ -28,9 +28,9 @@ export default function NumberInput({
     disabled = false
 }: NumberInputProps) {
     return (
-        <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-            <label className="block text-(--color-primary) text-xl font-semibold mb-3">
-                <Icon strokeWidth={3} className="inline mr-2 mb-1" size={24} />
+        <div className="rounded-2xl p-6 bg-white/10 backdrop-blur">
+            <label className="flex items-center justify-center gap-1 text-(--color-primary) text-2xl font-semibold mb-3">
+                <Icon strokeWidth={3} size={24} />
                 {label}
             </label>
             <div className="number-input-wrapper">

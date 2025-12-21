@@ -19,7 +19,7 @@ export default function RevealState({
 
     return (
         <div className="text-center space-y-8">
-            <div className={`rounded-2xl p-6 border-2
+            <header className={`rounded-2xl p-6 border-2
                 ${gameData.game.showRole ?
                     (player.isImpostor
                         ? 'bg-linear-to-br from-red-400/40 to-red-900/40 border-red-400'
@@ -28,7 +28,7 @@ export default function RevealState({
                 <h2 className="text-3xl font-bold text-(--color-secondary)">
                     {gameData.game.showRole ? (player.isImpostor ? '🎭' : '🃏') : '🔒'} Carta de {player.name}
                 </h2>
-            </div>
+            </header>
 
             {!gameData.game.showRole ? (
                 <div className="flex flex-col items-center justify-center space-y-6">

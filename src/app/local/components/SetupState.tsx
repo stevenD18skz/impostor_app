@@ -1,4 +1,4 @@
-import { LibraryBig, Clock, Users, WifiOff, Drama, HatGlasses } from 'lucide-react';
+import { Book, Clock, Users, WifiOff, Drama, HatGlasses } from 'lucide-react';
 import { categorias } from '@/app/lib/data';
 import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
 import NumberInput from '@/components/ui/NumberInput';
@@ -34,30 +34,30 @@ export default function SetupState({
         }
     };
     return (
-        <div className="text-center space-y-4">
-            <div className='flex flex-col items-center'>
-                <h1 className="flex items-center gap-1 text-5xl font-bold text-(--color-main)">
-                    <HatGlasses size={64} className="inline mr-2" />
+        <div className="space-y-6">
+            <header className='flex flex-col items-center'>
+                <h1 className="flex items-center justify-center gap-1 text-(--color-main) text-5xl font-bold">
+                    <HatGlasses size={64}/>
                     EL IMPOSTOR
                 </h1>
-                <p className="flex items-center justify-center gap-1 text-lg text-(--color-detail)">
-                    <WifiOff />
+                <p className="flex items-center justify-center gap-1 text-(--color-detail) text-lg">
+                    <WifiOff size={24}/>
                     Modo Local
                 </p>
-            </div>
+            </header>
 
-            <div className="space-y-4">
+            <main className="space-y-4">
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur">
-                    <label className="flex items-center justify-center gap-1 text-(--color-primary) text-xl font-semibold mb-3">
-                        <LibraryBig className="inline" size={24} />
+                    <label className="flex items-center justify-center gap-1 text-(--color-primary) text-2xl font-semibold mb-3">
+                        <Book size={24} strokeWidth={3}/>
                         Categoría
                     </label>
                     <select
                         name="selectedCategory"
                         value={config.selectedCategory}
                         onChange={handleChange}
-                        className="w-full px-4  py-3 text-xl bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
-                    >
+                        className="w-full px-4 py-3 text-2xl bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
+                >
                         {Object.keys(categorias).map(key => (
                             <option key={key} value={key} className="bg-slate-800">
                                 {/* @ts-ignore */}
@@ -103,12 +103,12 @@ export default function SetupState({
                     onIncrement={() => handleIncrement('timeLimit', 600, 30)}
                     onDecrement={() => handleDecrement('timeLimit', 60, 30)}
                 />
-            </div>
+            </main>
 
-            <div className="flex gap-4">
+            <footer className="flex gap-4">
                 <ButtonsGeneral type="back" onBack={onBack} onContinue={onContinue} />
                 <ButtonsGeneral type="continue" onBack={onBack} onContinue={onContinue} />
-            </div>
+            </footer>
         </div>
     );
 }
