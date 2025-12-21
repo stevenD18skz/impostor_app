@@ -30,7 +30,7 @@ export default function PlayingState({
             </header>
 
             <main className="space-y-4">
-                <div className="p-4 rounded-2xl bg-indigo-500/30 ">
+                <div className="p-4 rounded-2xl bg-white/10">
                     <p className="text-xl font-bold text-(--color-primary) ">Tiempo Restante</p>
                     <p className={`text-7xl font-bold ${gameData.timer.timeLeft <= 30 ? 'text-pink-600 animate-pulse' : 'text-(--color-secondary)'}`}>
                         {formatTime(gameData.timer.timeLeft)}

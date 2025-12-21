@@ -233,7 +233,6 @@ export default function LocalGame() {
     }));
   };
 
-
   return (
     <div className="flex items-center justify-center w-full min-h-screen bg-linear-to-br from-indigo-900 to-purple-900 text-center">
       <div className="w-full max-w-2xl p-8 xl:rounded-3xl shadow-2xl bg-white/10 backdrop-blur-lg">
