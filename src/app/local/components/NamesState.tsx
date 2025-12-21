@@ -28,7 +28,7 @@ export default function NamesState({
             <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
                 {Array(gameData.config.numPlayers).fill(0).map((_, idx) => (
                     <div key={idx} className="bg-white/10 rounded-xl p-4 backdrop-blur">
-                        <label className="block text-white text-lg font-semibold mb-2">
+                        <label className="block text-purple-400 text-lg font-semibold mb-2">
                             Jugador {idx + 1}
                         </label>
                         <input
@@ -38,7 +38,7 @@ export default function NamesState({
                             placeholder={`Jugador ${idx + 1}`}
                             value={gameData.game.playerNames[idx] || ''}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 text-lg bg-white/20 text-white placeholder-purple-300 rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
+                            className="w-full px-4 py-3 text-lg bg-white/20 text-white placeholder-slate-300 rounded-xl border-2 border-white/30 focus:border-purple-400 focus:outline-none"
                         />
                     </div>
                 ))}

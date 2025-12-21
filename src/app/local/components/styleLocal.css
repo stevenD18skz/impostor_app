@@ -95,5 +95,6 @@ input[type="number"] {
 /* Para Firefox */
 .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #a855f7 rgba(255, 255, 255, 0.05);
+    scrollbar-color: #a065d5 rgba(255, 255, 255, 0.05);
+    padding: 0.2rem;
 }
