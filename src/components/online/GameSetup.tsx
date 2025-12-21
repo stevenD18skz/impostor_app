@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
-import { HatGlasses, Wifi, UserRound, DoorOpen, WifiOff } from 'lucide-react';
+import { HatGlasses, Wifi, UserRound, DoorOpen, WifiOff, PencilRuler } from 'lucide-react';
 
 // Esquemas de validación con Zod
 const playerNameSchema = z.string()
@@ -22,7 +22,7 @@ function Separator() {
   return (
     <div className='flex items-center gap-3 py-2 m-0 p-0'>
       <div className='flex-1 h-px bg-white/20 m-0 p-0' />
-      <span className='text-(--color-detail) text-sm font-semibold m-0 p-0'>◆</span>
+      <span className='text-(--color-detail) text-sm font-semibold m-0 p-0'>○</span>
       <div className='flex-1 h-px bg-white/20 m-0 p-0' />
     </div>
   )
@@ -132,7 +132,6 @@ export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProp
         <Separator />
 
         <div className="pt-4 text-center">
-          <p className="text-(--color-primary) text-xl font-semibold mb-3">Unirse a una Sala</p>
           <div className="flex gap-3">
             <input
               type="text"
@@ -155,26 +154,25 @@ export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProp
         <Separator />
 
         <div className="pt-4 text-center">
-          <p className="text-(--color-primary) text-xl font-semibold mb-3">Crear Nueva Sala</p>
           <button
             onClick={createRoom}
             disabled={isJoining}
             className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300 shadow-lg disabled:opacity-50"
           >
-            ✨ {isJoining ? 'Creando sala...' : 'Crear Sala'}
+            <PencilRuler size={24} strokeWidth={3} />
+            {isJoining ? 'Creando sala...' : 'Crear Sala'}
           </button>
         </div>
 
         {error && (
-          <div className="bg-red-500/20 border-2 border-red-500 text-red-100 text-lg p-4 rounded-xl">
-            ⚠️ {error}
+          <div className="bg-red-500/20 border-2 border-red-500 text-red-100 text-lg p-4 rounded-xl text-center">
+            ⚠️ {error} ⚠️
           </div>
         )}
 
         <Separator />
 
         <div className="pt-4 text-center">
-          <p className="text-(--color-primary) text-xl font-semibold mb-3">Jugar Local</p>
           <button
             onClick={handleLocalPlay}
             className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-slate-600 text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300 shadow-lg"

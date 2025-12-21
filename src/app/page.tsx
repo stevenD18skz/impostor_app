@@ -266,7 +266,7 @@ export default function ImpostorGame() {
   if (isRestoringSession) {
     return (
       <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20 text-center">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white text-xl font-semibold">Restaurando sesión...</p>
         </div>
@@ -277,7 +277,7 @@ export default function ImpostorGame() {
   if (mode === 'menu' || (!room && mode !== 'local')) {
     return (
       <div className="min-h-screen bg-linear-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl border border-white/20">
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full max-w-2xl">
           <GameSetup handleJoin={handleJoin} handleLocalPlay={handleLocalPlay} />
         </div>
       </div>
@@ -287,7 +287,7 @@ export default function ImpostorGame() {
 
   return (
     <div className="flex items-center justify-center p-4 min-h-screen bg-linear-to-br from-purple-900 via-purple-900 to-indigo-900 text-center">
-      <div className={`bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full border border-white/20
+      <div className={`bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 w-full
         ${room.game_state === 'setup' ? 'max-w-5xl' : 'max-w-2xl'} 
         `}>
 
