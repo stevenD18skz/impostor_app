@@ -50,6 +50,7 @@ export default function RevealState({
   };
 
   const isLastPlayer = gameData.game.currentPlayer === totalPlayers - 1;
+  const nextPlayerName = !isLastPlayer ? gameData.game.players[gameData.game.currentPlayer + 1].name : '';
 
   return (
     <div className="reveal-screen">
@@ -71,17 +72,30 @@ export default function RevealState({
         <div className="reveal-player-info">
           <p className="reveal-player-turn">Turno de</p>
           <p className="reveal-player-name">{player.name}</p>
+          
           {!hasRevealed && (
-            <p className="reveal-player-hint">
-              {typeof window !== 'undefined' && 'ontouchstart' in window
-                ? '👇 Mantén presionada la carta'
-                : '🖱️ Mantén presionado para ver tu rol'}
-            </p>
+            <div className="flex flex-col gap-1.5 items-center">
+              <p className="text-pink-400 font-semibold text-sm">
+                ¡Asegúrate de que nadie mire tu pantalla! 🤫
+              </p>
+              <p className="reveal-player-hint">
+                {typeof window !== 'undefined' && 'ontouchstart' in window
+                  ? '👇 Mantén presionada la carta para ver tu rol'
+                  : '🖱️ Mantén presionado para ver tu rol'}
+              </p>
+            </div>
           )}
           {hasRevealed && !isPeeking && (
-            <p className="reveal-player-hint revealed-hint">
-              ✅ Puedes verla otra vez o continuar
-            </p>
+            <div className="flex flex-col gap-1 items-center">
+               <p className="reveal-player-hint revealed-hint">
+                 ✅ ¿Ya sabes tu rol?
+               </p>
+               <p className="text-gray-300 text-sm font-medium px-4 text-center">
+                 {isLastPlayer 
+                   ? 'Si estás listo, pulsa empezar para comenzar el juego.' 
+                   : `Ya puedes soltar la carta. Pásale el dispositivo a ${nextPlayerName} y pulsa el botón gris.`}
+               </p>
+            </div>
           )}
         </div>
 
@@ -154,11 +168,11 @@ export default function RevealState({
         <button
           onClick={onNextPlayer}
           disabled={!hasRevealed}
-          className="reveal-next-btn"
+          className="reveal-next-btn !bg-slate-600 hover:!bg-slate-700 active:!bg-slate-800"
         >
           {isLastPlayer
-            ? <><span>¡Empezar Partida!</span> <span>🎮</span></>
-            : <><span>Siguiente Jugador</span> <ChevronRight size={22} strokeWidth={3} /></>
+            ? <><span>¡Todo listo, empezar!</span> <span>🎮</span></>
+            : <><span>Pasar a {nextPlayerName}</span> <ChevronRight size={22} strokeWidth={3} /></>
           }
         </button>
       </div>

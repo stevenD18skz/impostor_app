@@ -97,12 +97,12 @@ export default function SetupState({
             </span>
           </label>
 
-          {!config.noTimeLimit && (
-            <div className="number-input-wrapper">
+          <div className={`overflow-hidden transition-all duration-500 ease-in-out ${config.noTimeLimit ? 'max-h-0 opacity-0' : 'max-h-40 opacity-100'}`}>
+            <div className="number-input-wrapper pt-2">
               <button
                 type="button"
                 onClick={() => handleDecrement('timeLimit', 60, 30)}
-                disabled={config.timeLimit <= 60}
+                disabled={config.timeLimit <= 60 || config.noTimeLimit}
                 className="number-input-btn"
               >
                 −
@@ -116,13 +116,13 @@ export default function SetupState({
               <button
                 type="button"
                 onClick={() => handleIncrement('timeLimit', 600, 30)}
-                disabled={config.timeLimit >= 600}
+                disabled={config.timeLimit >= 600 || config.noTimeLimit}
                 className="number-input-btn"
               >
                 +
               </button>
             </div>
-          )}
+          </div>
         </div>
       </main>
 

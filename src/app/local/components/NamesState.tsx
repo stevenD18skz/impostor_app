@@ -96,7 +96,7 @@ export default function NamesState({
         </div>
       )}
 
-      <main className="flex flex-col gap-2.5 flex-1 overflow-y-auto custom-scrollbar max-h-[69vh] pr-1">
+      <main className="flex flex-col gap-2.5 flex-1 overflow-y-auto custom-scrollbar max-h-[68vh] pr-1">
         {names.map((name, idx) => (
           <div key={idx} className="bg-white/8 rounded-xl p-3">
             <div className="flex items-center gap-2 mb-1.5">
