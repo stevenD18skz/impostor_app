@@ -127,7 +127,7 @@ export default function SetupState({
       </main>
 
       <footer className="flex gap-3 pt-2">
-        <ButtonsGeneral type="back" onBack={onBack} onContinue={onContinue} text="Atrás" />
+        <ButtonsGeneral type="back" onBack={onBack} onContinue={onContinue} text="Jugadores" />
         <ButtonsGeneral type="continue" onBack={onBack} onContinue={onContinue} text="Jugar" />
       </footer>
     </div>
