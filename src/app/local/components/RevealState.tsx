@@ -73,8 +73,8 @@ export default function RevealState({
           <p className="reveal-player-turn">Turno de</p>
           <p className="reveal-player-name">{player.name}</p>
           
-          {!hasRevealed && (
-            <div className="flex flex-col gap-1.5 items-center">
+          {!hasRevealed && !isPeeking && (
+            <div className="flex flex-col gap-1.5 items-center animate-in fade-in zoom-in duration-300">
               <p className="text-pink-400 font-semibold text-sm">
                 ¡Asegúrate de que nadie mire tu pantalla! 🤫
               </p>
@@ -85,8 +85,20 @@ export default function RevealState({
               </p>
             </div>
           )}
+
+          {isPeeking && (
+            <div className="flex flex-col gap-1.5 items-center animate-in fade-in zoom-in duration-300">
+              <p className="text-cyan-400 font-semibold text-sm">
+                Memorízalo bien... 🧠
+              </p>
+              <p className="reveal-player-hint revealed-hint">
+                ✋ Suelta la pantalla para volver a esconderlo
+              </p>
+            </div>
+          )}
+
           {hasRevealed && !isPeeking && (
-            <div className="flex flex-col gap-1 items-center">
+            <div className="flex flex-col gap-1 items-center animate-in fade-in zoom-in duration-300">
                <p className="reveal-player-hint revealed-hint">
                  ✅ ¿Ya sabes tu rol?
                </p>
