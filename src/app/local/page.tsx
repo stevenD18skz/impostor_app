@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { categorias } from '@/app/lib/data';
+import { categorias } from '@/lib/data';
 import SetupState from '@/app/local/components/SetupState';
 import NamesState from '@/app/local/components/NamesState';
 import RevealState from '@/app/local/components/RevealState';
@@ -10,17 +10,20 @@ import EndedState from '@/app/local/components/EndedState';
 import { useRouter } from 'next/navigation';
 import { GameData } from '@/app/types/local';
 
+const DEFAULT_NUM_PLAYERS = 4;
+
 const initialGameData: GameData = {
-  gameState: 'setup',
+  gameState: 'names',
   config: {
-    numPlayers: 4,
+    numPlayers: DEFAULT_NUM_PLAYERS,
     numImpostors: 1,
     selectedCategory: 'comida',
     timeLimit: 180,
+    noTimeLimit: false,
   },
   game: {
     players: [],
-    playerNames: [],
+    playerNames: Array(DEFAULT_NUM_PLAYERS).fill(''),
     secretWord: '',
     playingOrder: [],
     currentPlayer: 0,
@@ -37,6 +40,7 @@ export default function LocalGame() {
   const router = useRouter();
 
   useEffect(() => {
+    if (gameData.config.noTimeLimit) return;
     let interval: string | number | NodeJS.Timeout | undefined;
     if (gameData.timer.isTimerRunning && gameData.timer.timeLeft > 0) {
       interval = setInterval(() => {
@@ -56,7 +60,7 @@ export default function LocalGame() {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [gameData.timer.isTimerRunning, gameData.timer.timeLeft]);
+  }, [gameData.timer.isTimerRunning, gameData.timer.timeLeft, gameData.config.noTimeLimit]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -64,46 +68,66 @@ export default function LocalGame() {
     if (name === 'selectedCategory') {
       setGameData(prev => ({
         ...prev,
-        config: {
-          ...prev.config,
-          [name]: value
-        }
+        config: { ...prev.config, [name]: value }
       }));
-    }
-    else if (name.startsWith('playerName-')) {
+    } else if (name === 'noTimeLimit') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setGameData(prev => ({
+        ...prev,
+        config: { ...prev.config, noTimeLimit: checked }
+      }));
+    } else if (name.startsWith('playerName-')) {
       const index = parseInt(name.split('-')[1]);
       setGameData(prev => ({
         ...prev,
         game: {
           ...prev.game,
-          playerNames: prev.game.playerNames.map((name, i) => i === index ? value : name)
+          playerNames: prev.game.playerNames.map((n, i) => i === index ? value : n)
         }
       }));
-    }
-    else {
-      setGameData(prev => ({
-        ...prev,
-        config: {
-          ...prev.config,
-          [name]: parseInt(value)
-        }
-      }));
+    } else {
+      const parsed = parseInt(value);
+      if (name === 'numPlayers') {
+        setGameData(prev => {
+          const newNames = Array(parsed).fill('').map((_, i) => prev.game.playerNames[i] || '');
+          const maxImpostors = Math.floor(parsed / 2);
+          return {
+            ...prev,
+            config: {
+              ...prev.config,
+              numPlayers: parsed,
+              numImpostors: Math.min(prev.config.numImpostors, maxImpostors)
+            },
+            game: { ...prev.game, playerNames: newNames }
+          };
+        });
+      } else {
+        setGameData(prev => ({
+          ...prev,
+          config: { ...prev.config, [name]: parsed }
+        }));
+      }
     }
   };
 
-  const goToNames = () => {
+  // Names → Setup
+  const goToSetup = (names: string[]) => {
     setGameData(prev => {
-      const newPlayerNames = prev.game.playerNames.length !== prev.config.numPlayers
-        ? Array(prev.config.numPlayers).fill('')
-        : prev.game.playerNames;
+      const maxImpostors = Math.floor(names.length / 2);
       return {
         ...prev,
-        gameState: 'names',
-        game: { ...prev.game, playerNames: newPlayerNames }
+        gameState: 'setup',
+        config: {
+          ...prev.config,
+          numPlayers: names.length,
+          numImpostors: Math.min(prev.config.numImpostors, maxImpostors)
+        },
+        game: { ...prev.game, playerNames: names }
       };
     });
   };
 
+  // Setup → Reveal (start game)
   const startGame = () => {
     setGameData(prev => {
       // @ts-ignore
@@ -138,19 +162,9 @@ export default function LocalGame() {
         },
         timer: {
           ...prev.timer,
-          timeLeft: prev.config.timeLimit
+          timeLeft: prev.config.noTimeLimit ? 0 : prev.config.timeLimit,
+          isTimerRunning: false
         }
-      };
-    });
-  };
-
-  const updatePlayerName = (index: number, name: string) => {
-    setGameData(prev => {
-      const newNames = [...prev.game.playerNames];
-      newNames[index] = name;
-      return {
-        ...prev,
-        game: { ...prev.game, playerNames: newNames }
       };
     });
   };
@@ -171,24 +185,30 @@ export default function LocalGame() {
         return {
           ...prev,
           gameState: 'playing',
-          game: {
-            ...prev.game,
-            playingOrder: shuffled
-          },
+          game: { ...prev.game, playingOrder: shuffled, showRole: false },
           timer: {
             ...prev.timer,
-            isTimerRunning: true
+            isTimerRunning: !prev.config.noTimeLimit
           }
         };
       }
     });
   };
 
+  // Nueva partida: mantiene nombres y config, vuelve a setup
   const resetGame = () => {
     setGameData(prev => ({
       ...initialGameData,
-      config: prev.config, // Mantener la configuración actual
-      timer: { ...initialGameData.timer, timeLeft: prev.config.timeLimit }
+      gameState: 'setup',
+      config: prev.config,
+      game: {
+        ...initialGameData.game,
+        playerNames: prev.game.playerNames,
+      },
+      timer: {
+        timeLeft: prev.config.noTimeLimit ? 0 : prev.config.timeLimit,
+        isTimerRunning: false
+      }
     }));
   };
 
@@ -198,17 +218,12 @@ export default function LocalGame() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleBack = () => {
-    router.back();
-  };
+  const handleBack = () => router.back();
 
   const handleShowRole = () => {
     setGameData(prev => ({
       ...prev,
-      game: {
-        ...prev.game,
-        showRole: true
-      }
+      game: { ...prev.game, showRole: true }
     }));
   };
 
@@ -220,37 +235,46 @@ export default function LocalGame() {
   };
 
   const handleEndGame = () => {
-    setGameData(prev => ({
-      ...prev,
-      gameState: 'ended'
-    }));
+    setGameData(prev => ({ ...prev, gameState: 'ended' }));
   };
 
-  const handleBackNames = () => {
-    setGameData(prev => ({
-      ...prev,
-      gameState: 'setup'
-    }));
+  const handleIncrement = (field: string, max: number, step: number = 1) => {
+    const currentValue = gameData.config[field as keyof typeof gameData.config] as number;
+    if (currentValue < max) {
+      const newValue = Math.min(currentValue + step, max);
+      handleChange({ target: { name: field, value: newValue.toString() } } as any);
+    }
+  };
+
+  const handleDecrement = (field: string, min: number, step: number = 1) => {
+    const currentValue = gameData.config[field as keyof typeof gameData.config] as number;
+    if (currentValue > min) {
+      const newValue = Math.max(currentValue - step, min);
+      handleChange({ target: { name: field, value: newValue.toString() } } as any);
+    }
   };
 
   return (
-    <div className="flex items-center justify-center w-full min-h-screen bg-linear-to-br from-indigo-900 to-purple-900 text-center">
-      <div className="w-full max-w-2xl p-8 xl:rounded-3xl shadow-2xl bg-white/10 backdrop-blur-lg">
-        {gameData.gameState === 'setup' && (
-          <SetupState
-            config={gameData.config}
-            handleChange={handleChange}
-            onBack={handleBack}
-            onContinue={goToNames}
-          />
-        )}
-
+    /* Mobile: full screen, no floating. Desktop: centered card */
+    <div className="game-root">
+      <div className="game-container">
         {gameData.gameState === 'names' && (
           <NamesState
             gameData={gameData}
             handleChange={handleChange}
-            onBack={handleBackNames}
-            onStartGame={startGame}
+            onBack={handleBack}
+            onContinue={goToSetup}
+          />
+        )}
+
+        {gameData.gameState === 'setup' && (
+          <SetupState
+            config={gameData.config}
+            handleChange={handleChange}
+            handleIncrement={handleIncrement}
+            handleDecrement={handleDecrement}
+            onBack={() => setGameData(prev => ({ ...prev, gameState: 'names' }))}
+            onContinue={startGame}
           />
         )}
 
@@ -278,7 +302,8 @@ export default function LocalGame() {
             players={gameData.game.players}
             onResetGame={resetGame}
           />
-        )}</div>
+        )}
+      </div>
     </div>
   );
 }

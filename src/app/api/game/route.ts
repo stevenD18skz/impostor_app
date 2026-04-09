@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { categorias } from '@/app/lib/data';
+import { categorias } from '@/lib/data';
 import { supabase } from '@/lib/supabase';
 
 // Helper to generate room code

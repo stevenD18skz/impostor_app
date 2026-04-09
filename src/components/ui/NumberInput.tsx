@@ -30,8 +30,8 @@ export default function NumberInput({
     disabled = false
 }: NumberInputProps) {
     return (
-        <div className="rounded-2xl p-6 bg-white/10 backdrop-blur">
-            <label className="flex items-center justify-center gap-1 text-(--color-primary) text-2xl font-semibold mb-3">
+        <div className="rounded-2xl p-4 bg-white/8">
+            <label className="flex items-center justify-center gap-1.5 text-(--color-primary) text-lg font-semibold mb-3">
                 <Icon strokeWidth={3} size={24} />
                 {label}
             </label>

@@ -1,5 +1,5 @@
 import { Users, Play, Settings, Home, Book, Drama, Clock, LogOut } from 'lucide-react';
-import { categorias } from '@/app/lib/data';
+import { categorias } from '@/lib/data';
 import { useState, useEffect } from 'react';
 import NumberInput from '@/components/ui/NumberInput';
 

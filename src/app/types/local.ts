@@ -4,12 +4,13 @@ export interface Player {
 }
 
 export interface GameData {
-  gameState: 'setup' | 'names' | 'reveal' | 'playing' | 'ended';
+  gameState: 'names' | 'setup' | 'reveal' | 'playing' | 'ended';
   config: {
     numPlayers: number;
     numImpostors: number;
     selectedCategory: string;
     timeLimit: number;
+    noTimeLimit: boolean;
   };
   game: {
     players: Player[];
@@ -24,4 +25,3 @@ export interface GameData {
     isTimerRunning: boolean;
   };
 }
-

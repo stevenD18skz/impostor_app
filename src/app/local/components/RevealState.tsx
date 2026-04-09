@@ -1,90 +1,164 @@
-import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
-import { Eye, Lightbulb } from 'lucide-react';
+'use client';
+
+import { useState, useRef, useCallback } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { Player, GameData } from '@/app/types/local';
+import Image from 'next/image';
+import './styleLocal.css';
 
 interface RevealStateProps {
-    gameData: GameData;
-    setShowRole: (show: boolean) => void;
-    onNextPlayer: () => void;
+  gameData: GameData;
+  setShowRole: (show: boolean) => void;
+  onNextPlayer: () => void;
 }
 
 export default function RevealState({
-    gameData,
-    setShowRole,
-    onNextPlayer
+  gameData,
+  setShowRole,
+  onNextPlayer
 }: RevealStateProps) {
-    const player: Player = gameData.game.players[gameData.game.currentPlayer];
+  const player: Player = gameData.game.players[gameData.game.currentPlayer];
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isPressed, setIsPressed] = useState(false);
 
+  const flipCard = useCallback(() => {
+    if (isFlipped || isFlipping) return;
+    setIsFlipping(true);
+    setTimeout(() => {
+      setIsFlipped(true);
+      setIsFlipping(false);
+      setShowRole(true);
+    }, 350);
+  }, [isFlipped, isFlipping, setShowRole]);
 
+  const handlePressStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    if (isFlipped) return;
+    setIsPressed(true);
+    pressTimer.current = setTimeout(() => {
+      flipCard();
+    }, 180);
+  };
 
-    return (
-        <div className="text-center space-y-8">
-            <header className={`rounded-2xl p-6 border-2
-                ${gameData.game.showRole ?
-                    (player.isImpostor
-                        ? 'bg-linear-to-br from-red-400/40 to-red-900/40 border-red-400'
-                        : 'bg-linear-to-br from-green-400/40 to-green-900/40 border-green-400')
-                    : 'bg-linear-to-br from-amber-300/40 to-amber-600/40 border-amber-400'}`}>
-                <h2 className="text-3xl font-bold text-(--color-secondary)">
-                    {gameData.game.showRole ? (player.isImpostor ? '🎭' : '🃏') : '🔒'} Carta de {player.name}
-                </h2>
-            </header>
+  const handlePressEnd = () => {
+    setIsPressed(false);
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+    if (!isFlipped) flipCard();
+  };
 
-            {!gameData.game.showRole ? (
-                <div className="flex flex-col items-center justify-center space-y-6">
-                    <div className="bg-linear-to-br from-amber-300/40 to-amber-600/40 border-2 border-amber-400 rounded-2xl p-8">
-                        <p className="text-(--color-secondary) text-2xl mb-4">
-                            ⚠️ {player.name}, asegúrate de que solo tú puedas ver la pantalla
-                        </p>
-                        <p className="text-(--color-detail) text-lg">
-                            Los demás jugadores deben mirar hacia otro lado
-                        </p>
-                    </div>
+  const handlePressCancel = () => {
+    setIsPressed(false);
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  };
 
-                    <button
-                        onClick={() => setShowRole(true)}
-                        className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl bg-orange-600 text-xl text-(--color-secondary) font-bold hover:bg-orange-700 transition-all duration-300"
-                    >
-                        <Eye className="inline" size={24} strokeWidth={3} />
-                        Ver Mi Rol
-                    </button>
-                </div>
-            ) : (
-                <div className="flex flex-col items-center justify-center space-y-6">
-                    <div className={`rounded-2xl p-8 border-2 w-full 
-                        ${player.isImpostor
-                            ? 'bg-linear-to-br from-red-400/40 to-red-900/40 border-red-400'
-                            : 'bg-linear-to-br from-green-400/40 to-green-900/40 border-green-400'}
-                        `}>
+  const totalPlayers = gameData.config.numPlayers;
+  const current = gameData.game.currentPlayer + 1;
 
-                        <h3 className="text-2xl font-bold text-(--color-secondary) mb-4">
-                            {player.isImpostor ? '🎭 ERES EL IMPOSTOR' : '✅ ERES INOCENTE'}
-                        </h3>
+  return (
+    <div className="reveal-screen">
+      {/* Header */}
+      <div className="reveal-header">
+        <h2 className="reveal-title">Revelación de Roles</h2>
+        <p className="reveal-subtitle">Jugador {current} de {totalPlayers}</p>
 
-                        {!player.isImpostor && (
-                            <div className="bg-white/20 rounded-xl p-6 mt-4">
-                                <p className="text-(--color-secondary) text-xl mb-2">Tu palabra secreta es</p>
-                                <p className="text-(--color-secondary) text-4xl font-bold">{gameData.game.secretWord}</p>
-                            </div>
-                        )}
-
-                        {player.isImpostor && (
-                            <div className="bg-white/20 rounded-xl p-6 space-y-4">
-                                <p className="text-(--color-secondary) text-2xl flex items-center justify-center mb-0">
-                                    <Lightbulb size={32} strokeWidth={3} className="text-amber-500" />
-                                    La categoría es
-                                </p>
-                                <p><strong className="text-pink-500 text-4xl">{gameData.config.selectedCategory}</strong></p>
-                                <p className="text-(--color-detail) text-lg">
-                                    No conoces la palabra secreta. Intenta descubrirla escuchando a los demás sin que te descubran.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    <ButtonsGeneral type="continue" onBack={() => setShowRole(false)} onContinue={onNextPlayer} />
-                </div>
-            )}
+        {/* Progress dots */}
+        <div className="reveal-progress">
+          {Array(totalPlayers).fill(0).map((_, i) => (
+            <div
+              key={i}
+              className={`progress-dot ${i < current ? 'active' : ''}`}
+            />
+          ))}
         </div>
-    );
+      </div>
+
+      {/* Card flip area */}
+      <div className="card-scene-wrapper">
+        {/* Player name chip */}
+        <div className="player-name-chip">
+          {player.name}
+        </div>
+
+        <div
+          className={`card-scene-3d`}
+          onMouseDown={!isFlipped ? handlePressStart : undefined}
+          onMouseUp={!isFlipped ? handlePressEnd : undefined}
+          onMouseLeave={!isFlipped ? handlePressCancel : undefined}
+          onTouchStart={!isFlipped ? handlePressStart : undefined}
+          onTouchEnd={!isFlipped ? handlePressEnd : undefined}
+          onTouchCancel={!isFlipped ? handlePressCancel : undefined}
+          style={{ cursor: isFlipped ? 'default' : 'pointer' }}
+        >
+          <div className={`card-3d-inner ${isFlipped ? 'flipped' : ''} ${isPressed && !isFlipped ? 'pressed' : ''}`}>
+            {/* FRONT — card back (mystery) */}
+            <div className="card-3d-face card-3d-front">
+              <Image
+                src="/card_back.png"
+                alt="Carta boca abajo"
+                fill
+                className="card-image"
+                priority
+                draggable={false}
+              />
+              <div className="card-hint">
+                <span>👆 Toca para revelar</span>
+              </div>
+            </div>
+
+            {/* BACK — impostor or innocent */}
+            <div className="card-3d-face card-3d-back">
+              <Image
+                src={player.isImpostor ? '/card_impostor.png' : '/card_innocent.png'}
+                alt={player.isImpostor ? 'Impostor' : 'Inocente'}
+                fill
+                className="card-image"
+                priority
+                draggable={false}
+              />
+
+              {/* Word overlay for innocents */}
+              {!player.isImpostor && isFlipped && (
+                <div className="card-word-overlay">
+                  <span className="card-word-label">Palabra secreta</span>
+                  <span className="card-word-value">{gameData.game.secretWord}</span>
+                </div>
+              )}
+
+              {/* Category overlay for impostors */}
+              {player.isImpostor && isFlipped && (
+                <div className="card-impostor-overlay">
+                  <span className="card-word-label">Categoría</span>
+                  <span className="card-word-value capitalize">{gameData.config.selectedCategory}</span>
+                  <span className="card-impostor-hint">Descubre la palabra sin que te atrapen</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Next button */}
+      {isFlipped && (
+        <div className="reveal-footer">
+          <button
+            onClick={onNextPlayer}
+            className="reveal-next-btn"
+          >
+            {gameData.game.currentPlayer < gameData.config.numPlayers - 1
+              ? <><span>Siguiente Jugador</span> <ChevronRight size={22} strokeWidth={3} /></>
+              : <><span>¡Comenzar Partida!</span> <span>🎮</span></>
+            }
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
