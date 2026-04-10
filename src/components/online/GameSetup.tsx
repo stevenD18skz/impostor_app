@@ -15,7 +15,6 @@ const roomCodeSchema = z.string()
 
 interface GameSetupProps {
   handleJoin: (roomCode: string, playerName: string, roomData: any) => void;
-  handleLocalPlay: () => void;
 }
 
 function Separator() {
@@ -28,7 +27,7 @@ function Separator() {
   )
 }
 
-export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProps) {
+export default function GameSetup({ handleJoin }: GameSetupProps) {
   // INPUTS
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
@@ -169,18 +168,6 @@ export default function GameSetup({ handleJoin, handleLocalPlay }: GameSetupProp
             ⚠️ {error} ⚠️
           </div>
         )}
-
-        <Separator />
-
-        <div className="pt-4 text-center">
-          <button
-            onClick={handleLocalPlay}
-            className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-slate-600 text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300 shadow-lg"
-          >
-            <WifiOff size={24} strokeWidth={3} />
-            Jugar Local (Un solo dispositivo)
-          </button>
-        </div>
       </main>
     </div>
   );

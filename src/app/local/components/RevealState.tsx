@@ -105,7 +105,7 @@ export default function RevealState({
                <p className="text-gray-300 text-sm font-medium px-4 text-center">
                  {isLastPlayer 
                    ? 'Si estás listo, pulsa empezar para comenzar el juego.' 
-                   : `Ya puedes soltar la carta. Pásale el dispositivo a ${nextPlayerName} y pulsa el botón gris.`}
+                   : `Pásale el dispositivo a ${nextPlayerName} y pulsa el botón gris.`}
                </p>
             </div>
           )}

@@ -96,21 +96,21 @@ export default function NamesState({
         </div>
       )}
 
-      <main className="flex flex-col gap-2.5 flex-1 overflow-y-auto custom-scrollbar max-h-[68vh] pr-1">
+      <main className="flex flex-col gap-2.5 flex-1 overflow-y-auto custom-scrollbar max-h-[65vh] pr-1">
         {names.map((name, idx) => (
           <div key={idx} className="bg-white/8 rounded-xl p-3">
             <div className="flex items-center gap-2 mb-1.5">
               <label className="flex items-center gap-1 text-(--color-primary) text-sm font-semibold">
-                <UserRound size={15} strokeWidth={3} />
+                <UserRound size={18} strokeWidth={3} />
                 Jugador {idx + 1}
               </label>
               {names.length > 3 && (
                 <button
                   type="button"
                   onClick={() => removePlayer(idx)}
-                  className="ml-auto p-1 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="ml-auto pr-1 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                 >
-                  <Trash2 size={16} strokeWidth={2.5} />
+                  <Trash2 size={18} strokeWidth={2.5} />
                 </button>
               )}
             </div>
@@ -140,7 +140,7 @@ export default function NamesState({
           <button
             type="button"
             onClick={addPlayer}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/20 text-(--color-detail) hover:border-(--color-primary) hover:text-(--color-primary) transition-all text-sm font-medium"
+            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/20 text-(--color-detail) hover:border-(--color-primary) hover:text-(--color-primary) transition-all text-sm font-medium cursor-pointer"
           >
             <Plus size={18} strokeWidth={2.5} />
             Añadir jugador ({names.length}/12)
