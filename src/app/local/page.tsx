@@ -255,54 +255,62 @@ export default function LocalGame() {
   };
 
   return (
-    /* Mobile: full screen, no floating. Desktop: centered card */
-    <div className="game-root">
-      <div className="game-container">
-        {gameData.gameState === 'names' && (
-          <NamesState
-            gameData={gameData}
-            handleChange={handleChange}
-            onBack={handleBack}
-            onContinue={goToSetup}
-          />
-        )}
+    <div className="flex items-center justify-center w-full min-h-screen bg-slate-900 font-vt323 selection:bg-pink-600 selection:text-white"
+         style={{ backgroundImage: 'linear-gradient(to right, #0f172a 1px, transparent 1px), linear-gradient(to bottom, #0f172a 1px, transparent 1px)', backgroundSize: '32px 32px' }}>
+      <div className="relative bg-slate-800 border-[6px] border-cyan-800 shadow-[0_0_30px_rgba(34,211,238,0.15)] p-4 sm:p-8 w-full max-w-2xl text-center z-10 m-4">
+        <div className="absolute top-2 left-2 w-4 h-4 bg-pink-600"></div>
+        <div className="absolute top-2 right-2 w-4 h-4 bg-cyan-400"></div>
+        <div className="absolute bottom-2 left-2 w-4 h-4 bg-cyan-400"></div>
+        <div className="absolute bottom-2 right-2 w-4 h-4 bg-pink-600"></div>
+        <div className="absolute inset-4 border-2 border-slate-700/50 pointer-events-none"></div>
 
-        {gameData.gameState === 'setup' && (
-          <SetupState
-            config={gameData.config}
-            handleChange={handleChange}
-            handleIncrement={handleIncrement}
-            handleDecrement={handleDecrement}
-            onBack={() => setGameData(prev => ({ ...prev, gameState: 'names' }))}
-            onContinue={startGame}
-          />
-        )}
+        <div className="relative z-10">
+          {gameData.gameState === 'names' && (
+            <NamesState
+              gameData={gameData}
+              handleChange={handleChange}
+              onBack={handleBack}
+              onContinue={goToSetup}
+            />
+          )}
 
-        {gameData.gameState === 'reveal' && (
-          <RevealState
-            gameData={gameData}
-            setShowRole={handleShowRole}
-            onNextPlayer={nextPlayer}
-          />
-        )}
+          {gameData.gameState === 'setup' && (
+            <SetupState
+              config={gameData.config}
+              handleChange={handleChange}
+              handleIncrement={handleIncrement}
+              handleDecrement={handleDecrement}
+              onBack={() => setGameData(prev => ({ ...prev, gameState: 'names' }))}
+              onContinue={startGame}
+            />
+          )}
 
-        {gameData.gameState === 'playing' && (
-          <PlayingState
-            gameData={gameData}
-            formatTime={formatTime}
-            setIsTimerRunning={handleTimerRunning}
-            onEndGame={handleEndGame}
-            onResetGame={resetGame}
-          />
-        )}
+          {gameData.gameState === 'reveal' && (
+            <RevealState
+              gameData={gameData}
+              setShowRole={handleShowRole}
+              onNextPlayer={nextPlayer}
+            />
+          )}
 
-        {gameData.gameState === 'ended' && (
-          <EndedState
-            secretWord={gameData.game.secretWord}
-            players={gameData.game.players}
-            onResetGame={resetGame}
-          />
-        )}
+          {gameData.gameState === 'playing' && (
+            <PlayingState
+              gameData={gameData}
+              formatTime={formatTime}
+              setIsTimerRunning={handleTimerRunning}
+              onEndGame={handleEndGame}
+              onResetGame={resetGame}
+            />
+          )}
+
+          {gameData.gameState === 'ended' && (
+            <EndedState
+              secretWord={gameData.game.secretWord}
+              players={gameData.game.players}
+              onResetGame={resetGame}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

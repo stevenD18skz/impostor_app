@@ -24,31 +24,35 @@ export default function SetupState({
   return (
     <div className="flex flex-col gap-5 flex-1">
       <header className="flex flex-col items-center pt-2">
-        <h1 className="flex items-center justify-center gap-1.5 text-(--color-main) text-4xl font-black tracking-tight">
-          <HatGlasses size={48} />
-          EL IMPOSTOR
+        <h1 className="flex items-center justify-center gap-3 text-cyan-400 text-2xl md:text-3xl font-press-start tracking-wider">
+          <HatGlasses size={36} strokeWidth={3} className="text-pink-500" />
+          IMPOSTOR
         </h1>
-        <p className="flex items-center justify-center gap-1 text-(--color-detail) text-sm mt-1">
-          <WifiOff size={15} />
-          Modo Local — Configuración
+        <p className="flex items-center justify-center gap-2 text-slate-400 text-lg font-vt323 mt-2 uppercase">
+          <WifiOff size={18} />
+          [ Modo Local - Config ]
         </p>
       </header>
 
       <main className="flex flex-col gap-4 flex-1">
-        {/* Categoría */}
-        <div className="bg-white/8 rounded-2xl p-4">
-          <label className="flex items-center justify-center gap-1.5 text-(--color-primary) text-lg font-semibold mb-3">
-            <Book size={20} strokeWidth={3} />
+        <div className="bg-slate-900 border-4 border-cyan-800 p-4 rounded-none relative">
+          <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600"></div>
+          <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400"></div>
+          <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400"></div>
+          <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600"></div>
+
+          <label className="flex items-center justify-center gap-2 text-cyan-400 text-lg font-bold uppercase tracking-widest mb-3 relative z-10">
+            <Book size={20} strokeWidth={3} className="text-pink-500" />
             Categoría
           </label>
           <select
             name="selectedCategory"
             value={config.selectedCategory}
             onChange={handleChange}
-            className="w-full px-4 py-3 text-lg cursor-pointer bg-white/15 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:outline-none"
+            className="w-full px-4 py-3 text-2xl font-vt323 cursor-pointer bg-slate-800 text-white border-2 border-cyan-700 rounded-none focus:border-cyan-400 focus:outline-none focus:bg-slate-700 transition-colors relative z-10"
           >
             {Object.keys(categorias).map(key => (
-              <option key={key} value={key} className="bg-slate-800">
+              <option key={key} value={key} className="bg-slate-800 text-xl">
                 {/* @ts-ignore */}
                 {categorias[key].nombre}
               </option>
@@ -69,15 +73,19 @@ export default function SetupState({
           onDecrement={() => handleDecrement('numImpostors', 1)}
         />
 
-        {/* Tiempo */}
-        <div className="bg-white/8 rounded-2xl p-4 flex flex-col gap-4">
-          <label className="flex items-center justify-center gap-1.5 text-(--color-primary) text-lg font-semibold">
-            <Clock size={20} strokeWidth={3} />
+        <div className="bg-slate-900 border-4 border-cyan-800 p-4 flex flex-col gap-4 rounded-none relative">
+          <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600"></div>
+          <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400"></div>
+          <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400"></div>
+          <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600"></div>
+
+          <label className="flex items-center justify-center gap-2 text-cyan-400 text-lg font-bold uppercase tracking-widest relative z-10">
+            <Clock size={20} strokeWidth={3} className="text-pink-500" />
             Tiempo del Juego
           </label>
 
           {/* Toggle sin límite */}
-          <label className="flex items-center justify-center gap-3 cursor-pointer group">
+          <label className="flex items-center justify-center gap-3 cursor-pointer group relative z-10">
             <div className="relative">
               <input
                 type="checkbox"
@@ -87,17 +95,17 @@ export default function SetupState({
                 onChange={handleChange}
                 className="sr-only"
               />
-              <div className={`w-12 h-6 rounded-full transition-all duration-300 ${config.noTimeLimit ? 'bg-purple-500' : 'bg-white/20'}`}>
-                <div className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${config.noTimeLimit ? 'translate-x-6' : 'translate-x-0'}`} />
+              <div className={`w-12 h-6 border-2 transition-all duration-300 rounded-none ${config.noTimeLimit ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-600'}`}>
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white transition-transform duration-300 rounded-none ${config.noTimeLimit ? 'translate-x-6' : 'translate-x-0'}`} />
               </div>
             </div>
-            <span className="flex items-center gap-1.5 text-(--color-secondary) text-base font-medium">
-              <Infinity size={18} strokeWidth={2.5} />
-              Sin límite de tiempo
+            <span className="flex items-center gap-2 text-white font-vt323 text-xl uppercase">
+              <Infinity size={22} strokeWidth={3} className="text-cyan-400" />
+              Sin límite
             </span>
           </label>
 
-          <div className={`overflow-hidden transition-all duration-500 ease-in-out ${config.noTimeLimit ? 'max-h-0 opacity-0' : 'max-h-40 opacity-100'}`}>
+          <div className={`overflow-hidden transition-all duration-500 ease-in-out relative z-10 ${config.noTimeLimit ? 'max-h-0 opacity-0' : 'max-h-40 opacity-100'}`}>
             <div className="number-input-wrapper pt-2">
               <button
                 type="button"
@@ -107,11 +115,11 @@ export default function SetupState({
               >
                 −
               </button>
-              <div className="flex-1 text-center">
-                <p className="text-(--color-secondary) text-3xl font-bold">
+              <div className="flex-1 text-center bg-slate-800 border-2 border-cyan-700 mx-2 py-2">
+                <p className="text-white text-4xl font-vt323">
                   {Math.floor(config.timeLimit / 60)}:{String(config.timeLimit % 60).padStart(2, '0')}
                 </p>
-                <p className="text-(--color-detail) text-xs">min : seg</p>
+                <p className="text-cyan-400 text-sm font-vt323 uppercase tracking-widest">min : seg</p>
               </div>
               <button
                 type="button"

@@ -57,7 +57,7 @@ export default function RevealState({
 
       {/* Header compacto */}
       <div className="reveal-header">
-        <h2 className="reveal-title">Revelación de Roles</h2>
+        <h2 className="reveal-title font-press-start text-cyan-400 text-xl tracking-wider">REVELACIÓN</h2>
         <div className="reveal-progress">
           {Array(totalPlayers).fill(0).map((_, i) => (
             <div key={i} className={`progress-dot ${i < current ? 'active' : ''}`} />
@@ -70,42 +70,42 @@ export default function RevealState({
 
         {/* Nombre del jugador con contexto */}
         <div className="reveal-player-info">
-          <p className="reveal-player-turn">Turno de</p>
-          <p className="reveal-player-name">{player.name}</p>
+          <p className="reveal-player-turn font-vt323 text-slate-400 text-xl">TURNO DE</p>
+          <p className="reveal-player-name font-press-start text-pink-500 text-3xl md:text-4xl">{player.name}</p>
           
           {!hasRevealed && !isPeeking && (
             <div className="flex flex-col gap-1.5 items-center animate-in fade-in zoom-in duration-300">
-              <p className="text-pink-400 font-semibold text-sm">
+              <p className="text-cyan-400 font-vt323 text-lg uppercase tracking-widest">
                 ¡Asegúrate de que nadie mire tu pantalla! 🤫
               </p>
-              <p className="reveal-player-hint">
+              <p className="reveal-player-hint font-vt323 text-xl text-slate-300">
                 {typeof window !== 'undefined' && 'ontouchstart' in window
-                  ? '👇 Mantén presionada la carta para ver tu rol'
-                  : '🖱️ Mantén presionado para ver tu rol'}
+                  ? '👇 Mantén presionada la carta'
+                  : '🖱️ Mantén presionado para ver'}
               </p>
             </div>
           )}
 
           {isPeeking && (
             <div className="flex flex-col gap-1.5 items-center animate-in fade-in zoom-in duration-300">
-              <p className="text-cyan-400 font-semibold text-sm">
+              <p className="text-pink-500 font-vt323 text-xl uppercase tracking-widest">
                 Memorízalo bien... 🧠
               </p>
-              <p className="reveal-player-hint revealed-hint">
-                ✋ Suelta la pantalla para volver a esconderlo
+              <p className="reveal-player-hint revealed-hint font-vt323 text-lg text-cyan-300">
+                ✋ Suelta la pantalla para ocultarlo
               </p>
             </div>
           )}
 
           {hasRevealed && !isPeeking && (
             <div className="flex flex-col gap-1 items-center animate-in fade-in zoom-in duration-300">
-               <p className="reveal-player-hint revealed-hint">
+               <p className="reveal-player-hint revealed-hint font-vt323 text-xl text-cyan-400">
                  ✅ ¿Ya sabes tu rol?
                </p>
-               <p className="text-gray-300 text-sm font-medium px-4 text-center">
+               <p className="text-slate-400 text-lg font-vt323 px-4 text-center mt-2 uppercase">
                  {isLastPlayer 
-                   ? 'Si estás listo, pulsa empezar para comenzar el juego.' 
-                   : `Pásale el dispositivo a ${nextPlayerName} y pulsa el botón gris.`}
+                   ? 'Si estás listo, pulsa empezar.' 
+                   : `Pásale el dispositivo a ${nextPlayerName}.`}
                </p>
             </div>
           )}
@@ -154,17 +154,17 @@ export default function RevealState({
               {/* Info overlay inocente */}
               {!player.isImpostor && (
                 <div className="card-word-overlay">
-                  <span className="card-word-label">Tu palabra secreta</span>
-                  <span className="card-word-value">{gameData.game.secretWord}</span>
+                  <span className="card-word-label font-vt323 text-cyan-400">Tu palabra secreta</span>
+                  <span className="card-word-value font-press-start text-white text-sm md:text-base mt-2 uppercase">{gameData.game.secretWord}</span>
                 </div>
               )}
 
               {/* Info overlay impostor */}
               {player.isImpostor && (
                 <div className="card-impostor-overlay">
-                  <span className="card-word-label">La categoría es</span>
-                  <span className="card-word-value capitalize">{gameData.config.selectedCategory}</span>
-                  <span className="card-impostor-hint">Adivina la palabra sin que te atrapen</span>
+                  <span className="card-word-label font-vt323 text-pink-400">La categoría es</span>
+                  <span className="card-word-value capitalize font-press-start text-white text-sm md:text-base mt-2">{gameData.config.selectedCategory}</span>
+                  <span className="card-impostor-hint font-vt323 text-slate-300 text-sm mt-2">Adivina la palabra sin ser atrapado</span>
                 </div>
               )}
             </div>
@@ -180,11 +180,11 @@ export default function RevealState({
         <button
           onClick={onNextPlayer}
           disabled={!hasRevealed}
-          className="reveal-next-btn !bg-slate-600 hover:!bg-slate-700 active:!bg-slate-800"
+          className="reveal-next-btn"
         >
           {isLastPlayer
-            ? <><span>¡Todo listo, empezar!</span> <span>🎮</span></>
-            : <><span>Pasar a {nextPlayerName}</span> <ChevronRight size={22} strokeWidth={3} /></>
+            ? <><span>EMPEZAR</span> <span>▶</span></>
+            : <><span>PASAR A {nextPlayerName}</span> <span>▶</span></>
           }
         </button>
       </div>

@@ -15,10 +15,11 @@ export default function ButtonsGeneral({
         return (
             <button
                 onClick={onBack}
-                className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl cursor-pointer text-xl bg-slate-600 text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
+                className="group relative flex flex-1 items-center justify-center gap-2 py-4 px-6 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none"
             >
-                <ArrowLeft strokeWidth={4} className="inline" size={24} />
-                {text || 'Volver'}
+                <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-800 group-hover:bg-cyan-400"></div>
+                <ArrowLeft strokeWidth={3} className="inline" size={18} />
+                {text || 'VOLVER'}
             </button>
         );
     }
@@ -26,10 +27,11 @@ export default function ButtonsGeneral({
         return (
             <button
                 onClick={onContinue}
-                className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl cursor-pointer text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300"
+                className="group relative flex flex-1 items-center justify-center gap-2 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none"
             >
-                <Play strokeWidth={4} className="inline" size={24} />
-                {text || 'Continuar'}
+                <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-700 group-hover:bg-pink-400"></div>
+                <Play strokeWidth={3} className="inline" size={18} />
+                {text || 'SIGUIENTE'}
             </button>
         );
     }

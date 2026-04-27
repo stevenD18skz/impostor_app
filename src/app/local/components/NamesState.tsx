@@ -79,14 +79,14 @@ export default function NamesState({
   };
 
   return (
-    <div className="flex flex-col gap-5 flex-1">
+    <div className="flex flex-col gap-5 flex-1 font-vt323">
       <header className="text-center pt-2">
-        <h1 className="flex items-center justify-center gap-2 text-3xl font-black text-(--color-primary)">
-          <UsersRound size={34} strokeWidth={3} />
-          Jugadores
+        <h1 className="flex items-center justify-center gap-3 text-2xl md:text-3xl font-press-start text-cyan-400 tracking-wider">
+          <UsersRound size={34} strokeWidth={3} className="text-pink-500" />
+          JUGADORES
         </h1>
-        <p className="text-sm text-(--color-detail) mt-1">
-          Ingresa los nombres (mín. 3, máx. 12)
+        <p className="text-xl text-slate-400 mt-2 uppercase">
+          [ Ingresa los nombres (mín. 3, máx. 12) ]
         </p>
       </header>
 
@@ -98,19 +98,19 @@ export default function NamesState({
 
       <main className="flex flex-col gap-2.5 flex-1 overflow-y-auto custom-scrollbar max-h-[65vh] pr-1">
         {names.map((name, idx) => (
-          <div key={idx} className="bg-white/8 rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-1.5">
-              <label className="flex items-center gap-1 text-(--color-primary) text-sm font-semibold">
-                <UserRound size={18} strokeWidth={3} />
+          <div key={idx} className="bg-slate-900 border-4 border-cyan-800 p-3 relative group">
+            <div className="flex items-center gap-2 mb-2">
+              <label className="flex items-center gap-2 text-cyan-400 text-lg uppercase font-bold tracking-widest">
+                <UserRound size={18} strokeWidth={3} className="text-pink-500" />
                 Jugador {idx + 1}
               </label>
               {names.length > 3 && (
                 <button
                   type="button"
                   onClick={() => removePlayer(idx)}
-                  className="ml-auto pr-1 rounded-lg text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                  className="ml-auto pr-1 text-pink-700 hover:text-pink-400 transition-colors cursor-pointer"
                 >
-                  <Trash2 size={18} strokeWidth={2.5} />
+                  <Trash2 size={20} strokeWidth={2.5} />
                 </button>
               )}
             </div>
@@ -122,10 +122,10 @@ export default function NamesState({
               value={name}
               onChange={e => updateName(idx, e.target.value)}
               maxLength={24}
-              className={`w-full px-3 py-2.5 text-base bg-white/15 text-(--color-secondary) rounded-lg focus:ring-2 focus:outline-none transition-all
+              className={`w-full px-4 py-3 text-xl bg-slate-800 text-white border-2 rounded-none focus:outline-none transition-all placeholder:text-slate-600
                 ${errors[idx]
-                  ? 'ring-2 ring-red-400/70 focus:ring-red-400'
-                  : 'focus:ring-(--color-primary)'
+                  ? 'border-pink-500 bg-pink-900/20'
+                  : 'border-cyan-700 focus:border-cyan-400 focus:bg-slate-700'
                 }`}
             />
             {errors[idx] && (
@@ -140,10 +140,10 @@ export default function NamesState({
           <button
             type="button"
             onClick={addPlayer}
-            className="flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-white/20 text-(--color-detail) hover:border-(--color-primary) hover:text-(--color-primary) transition-all text-sm font-medium cursor-pointer"
+            className="flex items-center justify-center gap-3 py-4 border-4 border-dashed border-slate-600 text-slate-400 hover:border-cyan-400 hover:text-cyan-400 transition-all text-xs sm:text-sm font-press-start cursor-pointer hover:bg-slate-800"
           >
-            <Plus size={18} strokeWidth={2.5} />
-            Añadir jugador ({names.length}/12)
+            <Plus size={20} strokeWidth={3} className="text-pink-500" />
+            AÑADIR JUGADOR ({names.length}/12)
           </button>
         )}
 

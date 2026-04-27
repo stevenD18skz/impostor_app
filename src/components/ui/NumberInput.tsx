@@ -30,19 +30,24 @@ export default function NumberInput({
     disabled = false
 }: NumberInputProps) {
     return (
-        <div className="rounded-2xl p-4 bg-white/8">
-            <label className="flex items-center justify-center gap-1.5 text-(--color-primary) text-lg font-semibold mb-3">
-                <Icon strokeWidth={3} size={24} />
+        <div className="border-4 border-cyan-800 p-4 bg-slate-900 rounded-none relative">
+            <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600"></div>
+            <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400"></div>
+            <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400"></div>
+            <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600"></div>
+
+            <label className="flex items-center justify-center gap-2 text-cyan-400 text-lg font-bold uppercase tracking-widest mb-3 relative z-10">
+                <Icon strokeWidth={3} size={20} className="text-pink-500" />
                 {label}
             </label>
-            <div className="number-input-wrapper">
+            <div className="number-input-wrapper relative z-10">
                 <button
                     type="button"
                     onClick={onDecrement}
                     disabled={value <= min || disabled}
                     className="number-input-btn"
                 >
-                    <Minus size={20} />
+                    <Minus size={20} strokeWidth={4} />
                 </button>
                 <input
                     name={name}
@@ -54,7 +59,7 @@ export default function NumberInput({
                     value={value}
                     onChange={onChange}
                     disabled={disabled}
-                    className="w-full px-4 py-3 text-2xl text-center bg-white/20 text-(--color-secondary) rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
+                    className="w-full px-4 py-3 text-3xl font-vt323 text-center bg-slate-800 text-white border-2 border-cyan-700 rounded-none focus:border-cyan-400 focus:outline-none focus:bg-slate-700 transition-colors"
                 />
                 <button
                     type="button"
@@ -62,7 +67,7 @@ export default function NumberInput({
                     disabled={value >= max || disabled}
                     className="number-input-btn"
                 >
-                    <Plus size={20} />
+                    <Plus size={20} strokeWidth={4} />
                 </button>
             </div>
         </div>
