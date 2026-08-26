@@ -14,7 +14,8 @@ const roomCodeSchema = z.string()
   .regex(/^[A-Z0-9]+$/, 'El código solo puede contener letras mayúsculas y números');
 
 interface GameSetupProps {
-  handleJoin: (roomCode: string, playerName: string, roomData: any) => void;
+  onCreate: (playerName: string) => Promise<void>;
+  onJoin: (roomCode: string, playerName: string) => Promise<void>;
 }
 
 function Separator() {
@@ -27,76 +28,48 @@ function Separator() {
   )
 }
 
-export default function GameSetup({ handleJoin }: GameSetupProps) {
+export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
   // INPUTS
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
 
   // STATE
-  const [isJoining, setIsJoining] = useState(false);
+  const [pending, setPending] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState('');
 
-
-
-  const createRoom = async () => {
+  // Crear y entrar hacen lo mismo alrededor: validar, mostrar el estado de
+  // espera y traducir el fallo a un mensaje. Solo cambia el trámite del medio.
+  const run = async (kind: 'create' | 'join', task: () => Promise<void>) => {
     setError('');
-    setIsJoining(true);
-
+    setPending(kind);
     try {
-      // Validar el nombre del jugador con Zod
-      playerNameSchema.parse(playerName);
-
-      const res = await fetch('/api/game', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create', playerName: playerName.trim() })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      handleJoin(data.roomCode, data.room, data.myPlayer);
+      await task();
     } catch (err: any) {
-      // Manejar errores de validación de Zod
       if (err instanceof z.ZodError) {
         setError(err.issues[0].message);
       } else {
-        setError(err.message);
+        setError(err?.message || 'Algo salió mal');
       }
-    } finally {
-      setIsJoining(false);
+      setPending(null);
     }
+    // En el camino feliz no se apaga el estado de espera: la pantalla entera se
+    // reemplaza por el lobby y tocar los botones otra vez no debería ser opción.
   };
 
-
-
-  const joinRoom = async () => {
-    setError('');
-    setIsJoining(true);
-
-    try {
-      // Validar el nombre del jugador con Zod
+  const createRoom = () =>
+    run('create', async () => {
       playerNameSchema.parse(playerName);
-      // Validar el código de sala con Zod
+      await onCreate(playerName.trim());
+    });
+
+  const joinRoom = () =>
+    run('join', async () => {
+      playerNameSchema.parse(playerName);
       roomCodeSchema.parse(roomCode.toUpperCase());
+      await onJoin(roomCode.toUpperCase(), playerName.trim());
+    });
 
-      const res = await fetch('/api/game', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'join', roomCode: roomCode.toUpperCase(), playerName: playerName.trim() })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      handleJoin(data.roomCode, data.room, data.myPlayer);
-    } catch (err: any) {
-      // Manejar errores de validación de Zod
-      if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
-      } else {
-        setError(err.message);
-      }
-    } finally {
-      setIsJoining(false);
-    }
-  };
+  const isJoining = pending !== null;
 
 
 
@@ -145,7 +118,7 @@ export default function GameSetup({ handleJoin }: GameSetupProps) {
               className="flex items-center justify-center gap-1 py-3 px-6 rounded-xl text-xl bg-cyan-600 text-(--color-secondary) font-bold hover:bg-cyan-700 transition-all duration-300 shadow-lg disabled:opacity-50"
             >
               <DoorOpen size={24} strokeWidth={3} />
-              {isJoining ? 'Uniendo...' : 'Entrar'}
+              {pending === 'join' ? 'Uniendo...' : 'Entrar'}
             </button>
           </div>
         </div>
@@ -159,7 +132,7 @@ export default function GameSetup({ handleJoin }: GameSetupProps) {
             className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300 shadow-lg disabled:opacity-50"
           >
             <PencilRuler size={24} strokeWidth={3} />
-            {isJoining ? 'Creando sala...' : 'Crear Sala'}
+            {pending === 'create' ? 'Creando sala...' : 'Crear Sala'}
           </button>
         </div>
 

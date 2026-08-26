@@ -1,33 +1,51 @@
 import { useState, useEffect } from 'react';
 import { Crown, Gamepad2, GamepadDirectional, ListOrdered, BookOpenText, ChevronDown } from 'lucide-react';
+import type { Card } from '@/lib/room';
 
 interface GameRunningProps {
-  room: any;
+  order: Card[];
+  timeLimit: number;
+  /**
+   * El arranque de la cuenta, ya traducido al reloj de ESTE aparato por el hook.
+   * Nada de esto viaja por la red cada segundo: el host anuncia una sola vez que
+   * la partida empezó y cada pantalla cuenta sola. Sincronizar el cronómetro
+   * mensaje a mensaje sería mandar un evento por segundo y por jugador para
+   * mostrar un número que cualquiera puede calcular en casa.
+   */
+  startedAtLocal: number | null;
   onEndGame: () => void;
 }
 
-export default function GameRunning({ room, onEndGame }: GameRunningProps) {
-  // Local timer for smooth countdown, synced with server occasionally if needed
-  // For simplicity, we'll just use the server time or a local countdown that starts when we enter
-  const [timeLeft, setTimeLeft] = useState(room.game_data.timeLeft);
+export default function GameRunning({ order, timeLimit, startedAtLocal, onEndGame }: GameRunningProps) {
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    // Simple countdown
-    if (timeLeft <= 0) return;
+    if (startedAtLocal === null) {
+      setTimeLeft(timeLimit);
+      return;
+    }
 
-    const interval = setInterval(() => {
-      setTimeLeft((prev: number) => prev - 1);
-    }, 1000);
+    // Se recalcula contra el ancla en vez de restar uno cada vuelta: si el
+    // teléfono se bloquea o la pestaña pasa a segundo plano, los intervalos se
+    // frenan y un contador que va restando se queda atrasado para siempre.
+    const tick = () => {
+      const elapsed = (Date.now() - startedAtLocal) / 1000;
+      setTimeLeft(Math.max(0, Math.round(timeLimit - elapsed)));
+    };
 
+    tick();
+    const interval = setInterval(tick, 250);
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, [startedAtLocal, timeLimit]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const isOver = timeLeft <= 0;
 
   return (
     <div className="space-y-6 text-(--color-main)">
@@ -41,8 +59,12 @@ export default function GameRunning({ room, onEndGame }: GameRunningProps) {
 
       <main className="space-y-4">
         <div className="p-4 rounded-2xl bg-white/10">
-          <p className="text-xl font-bold text-(--color-primary)">Tiempo Restante</p>
-          <p className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-pink-600 animate-pulse' : 'text-(--color-secondary)'}`}>
+          <p className="text-xl font-bold text-(--color-primary)">
+            {isOver ? '¡Se acabó el tiempo!' : 'Tiempo Restante'}
+          </p>
+          <p
+            className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-pink-600 animate-pulse' : 'text-(--color-secondary)'}`}
+          >
             {formatTime(timeLeft)}
           </p>
         </div>
@@ -54,11 +76,8 @@ export default function GameRunning({ room, onEndGame }: GameRunningProps) {
           </p>
 
           <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto text-xl custom-scrollbar">
-            {room.game_data.playingOrder.map((player: any, idx: number) => (
-              <div
-                key={idx}
-                className="p-3 rounded-lg bg-white/10 text-xl"
-              >
+            {order.map((player, idx) => (
+              <div key={player.id} className="p-3 rounded-lg bg-white/10 text-xl">
                 <span className="font-semibold text-(--color-primary)">{idx + 1}.</span>
                 <strong className="text-(--color-secondary) ml-2">{player.name}</strong>
               </div>
@@ -75,10 +94,16 @@ export default function GameRunning({ room, onEndGame }: GameRunningProps) {
               <BookOpenText size={32} strokeWidth={2} />
               <span className="text-2xl font-bold">Instrucciones</span>
             </div>
-            <ChevronDown size={32} strokeWidth={3} className={` transition-transform duration-300 ${showInstructions ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              size={32}
+              strokeWidth={3}
+              className={`transition-transform duration-300 ${showInstructions ? 'rotate-180' : ''}`}
+            />
           </button>
 
-          <div className={`overflow-hidden transition-all ease-in duration-300 ${showInstructions ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div
+            className={`overflow-hidden transition-all ease-in duration-300 ${showInstructions ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+          >
             <div className="px-6">
               <ul className="space-y-2 text-lg text-left text-(--color-detail)">
                 <li>• Los inocentes deben hablar sobre la palabra indirectamente</li>
