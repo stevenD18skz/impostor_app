@@ -1,12 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Obtén estas credenciales de tu proyecto en Supabase
-// Para modo local (sin multijugador), estas pueden estar vacías
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder-project.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+// El modo online NO usa base de datos: solo el canal Realtime (Presence +
+// Broadcast). Por eso alcanza con la URL del proyecto y la anon key.
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  console.warn('⚠️ Nota: Las credenciales de Supabase no están configuradas. El modo multijugador no funcionará, pero puedes seguir usando el modo local.');
+/**
+ * Sin credenciales el cliente apuntaría a un host inventado y cada intento de
+ * entrar a una sala se quedaría colgado hasta el timeout, sin decir por qué.
+ * Se expone la bandera para avisarlo en pantalla en vez de fallar en silencio.
+ */
+export const isSupabaseConfigured = Boolean(url && anonKey);
+
+export const supabase = createClient(
+  url || 'https://placeholder-project.supabase.co',
+  anonKey || 'placeholder-key',
+  {
+    auth: { persistSession: false },
+    realtime: { params: { eventsPerSecond: 20 } },
+  },
+);
+
+if (!isSupabaseConfigured && typeof window !== 'undefined') {
+  console.warn(
+    '[impostor] Falta NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local. ' +
+      'El modo online no puede conectarse; el modo local sigue funcionando.',
+  );
 }
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);

@@ -6,9 +6,11 @@ interface GameEndProps {
   /** Pueden ser varios: la configuración deja subir el número de impostores. */
   impostors: Card[];
   onReset: () => void;
+  /** Volver al lobby lo decide el anfitrión; los demás esperan. */
+  canReset: boolean;
 }
 
-export default function GameEnd({ secretWord, impostors, onReset }: GameEndProps) {
+export default function GameEnd({ secretWord, impostors, onReset, canReset }: GameEndProps) {
   const many = impostors.length > 1;
 
   return (
@@ -40,19 +42,27 @@ export default function GameEnd({ secretWord, impostors, onReset }: GameEndProps
 
         <div className="pt-2 border-t border-white/20">
           <p className="text-lg text-(--color-detail)">
-            {many ? '¿Adivinaron quiénes eran los impostores? 🤔' : '¿Adivinaron quién era el impostor? 🤔'}
+            {many
+              ? '¿Adivinaron quiénes eran los impostores? 🤔'
+              : '¿Adivinaron quién era el impostor? 🤔'}
           </p>
         </div>
       </main>
 
       <footer className="flex items-center justify-center gap-2">
-        <button
-          onClick={onReset}
-          className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl bg-slate-600 text-xl text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
-        >
-          <RotateCcw size={32} strokeWidth={3} />
-          Volver al Lobby
-        </button>
+        {canReset ? (
+          <button
+            onClick={onReset}
+            className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl bg-slate-600 text-xl text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
+          >
+            <RotateCcw size={32} strokeWidth={3} />
+            Volver al Lobby
+          </button>
+        ) : (
+          <p className="text-(--color-detail) text-xl animate-pulse">
+            Esperando a que el anfitrión vuelva al lobby...
+          </p>
+        )}
       </footer>
     </div>
   );

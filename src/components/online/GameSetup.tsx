@@ -1,17 +1,27 @@
+'use client';
+
 import { useState } from 'react';
 import { z } from 'zod';
-import { HatGlasses, Wifi, UserRound, DoorOpen, WifiOff, PencilRuler } from 'lucide-react';
+import { HatGlasses, Wifi, UserRound, DoorOpen, PencilRuler } from 'lucide-react';
 
-// Esquemas de validación con Zod
-const playerNameSchema = z.string()
+import { CODE_LENGTH } from '@/lib/room';
+
+// Se valida con Zod y se comparte con la pantalla de entrada por enlace, para
+// que las dos puertas de la sala pidan exactamente lo mismo.
+export const playerNameSchema = z
+  .string()
+  .trim()
   .min(2, 'El nombre debe tener al menos 2 caracteres')
   .max(20, 'El nombre no puede tener más de 20 caracteres')
-  .trim()
-  .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras y espacios');
+  // Se permiten números: "Juan2" es un nombre perfectamente normal en una sala.
+  .regex(/^[\p{L}\p{N} _.-]+$/u, 'El nombre solo puede tener letras, números y espacios');
 
-const roomCodeSchema = z.string()
-  .length(6, 'El código de sala debe tener exactamente 6 caracteres')
-  .regex(/^[A-Z0-9]+$/, 'El código solo puede contener letras mayúsculas y números');
+export const roomCodeSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .length(CODE_LENGTH, `El código de sala debe tener ${CODE_LENGTH} caracteres`)
+  .regex(/^[A-Z0-9]+$/, 'El código solo puede tener letras y números');
 
 interface GameSetupProps {
   onCreate: (playerName: string) => Promise<void>;
@@ -20,20 +30,18 @@ interface GameSetupProps {
 
 function Separator() {
   return (
-    <div className='flex items-center gap-3 py-2 m-0 p-0'>
-      <div className='flex-1 h-px bg-white/20 m-0 p-0' />
-      <span className='text-(--color-detail) text-sm font-semibold m-0 p-0'>○</span>
-      <div className='flex-1 h-px bg-white/20 m-0 p-0' />
+    <div className="flex items-center gap-3 py-2 m-0 p-0">
+      <div className="flex-1 h-px bg-white/20 m-0 p-0" />
+      <span className="text-(--color-detail) text-sm font-semibold m-0 p-0">○</span>
+      <div className="flex-1 h-px bg-white/20 m-0 p-0" />
     </div>
-  )
+  );
 }
 
 export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
-  // INPUTS
   const [playerName, setPlayerName] = useState('');
   const [roomCode, setRoomCode] = useState('');
 
-  // STATE
   const [pending, setPending] = useState<'create' | 'join' | null>(null);
   const [error, setError] = useState('');
 
@@ -44,38 +52,33 @@ export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
     setPending(kind);
     try {
       await task();
-    } catch (err: any) {
-      if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
-      } else {
-        setError(err?.message || 'Algo salió mal');
-      }
+    } catch (err) {
+      if (err instanceof z.ZodError) setError(err.issues[0]?.message ?? 'Datos inválidos');
+      else setError(err instanceof Error ? err.message : 'Algo salió mal');
       setPending(null);
     }
-    // En el camino feliz no se apaga el estado de espera: la pantalla entera se
-    // reemplaza por el lobby y tocar los botones otra vez no debería ser opción.
+    // En el camino feliz no se apaga el estado de espera: la navegación se lleva
+    // la pantalla y tocar los botones otra vez no debería ser opción.
   };
 
   const createRoom = () =>
     run('create', async () => {
-      playerNameSchema.parse(playerName);
-      await onCreate(playerName.trim());
+      const name = playerNameSchema.parse(playerName);
+      await onCreate(name);
     });
 
   const joinRoom = () =>
     run('join', async () => {
-      playerNameSchema.parse(playerName);
-      roomCodeSchema.parse(roomCode.toUpperCase());
-      await onJoin(roomCode.toUpperCase(), playerName.trim());
+      const name = playerNameSchema.parse(playerName);
+      const code = roomCodeSchema.parse(roomCode);
+      await onJoin(code, name);
     });
 
-  const isJoining = pending !== null;
-
-
+  const isBusy = pending !== null;
 
   return (
     <div className="space-y-6">
-      <header className='flex flex-col items-center'>
+      <header className="flex flex-col items-center">
         <h1 className="flex items-center justify-center gap-1 text-(--color-main) text-5xl font-bold">
           <HatGlasses size={64} />
           EL IMPOSTOR
@@ -97,6 +100,7 @@ export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Ej: Juan"
+            maxLength={20}
             className="w-full px-4 py-3 text-xl bg-white/20 text-(--color-secondary) placeholder-purple-300 rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
           />
         </div>
@@ -109,12 +113,14 @@ export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
               type="text"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && !isBusy && joinRoom()}
               placeholder="CÓDIGO"
-              className="flex-1 px-4 py-3 text-xl bg-white/20 text-(--color-secondary) placeholder-purple-300 rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none uppercase"
+              maxLength={CODE_LENGTH}
+              className="flex-1 min-w-0 px-4 py-3 text-xl bg-white/20 text-(--color-secondary) placeholder-purple-300 rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none uppercase tracking-widest"
             />
             <button
               onClick={joinRoom}
-              disabled={isJoining}
+              disabled={isBusy}
               className="flex items-center justify-center gap-1 py-3 px-6 rounded-xl text-xl bg-cyan-600 text-(--color-secondary) font-bold hover:bg-cyan-700 transition-all duration-300 shadow-lg disabled:opacity-50"
             >
               <DoorOpen size={24} strokeWidth={3} />
@@ -128,7 +134,7 @@ export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
         <div className="pt-4 text-center">
           <button
             onClick={createRoom}
-            disabled={isJoining}
+            disabled={isBusy}
             className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300 shadow-lg disabled:opacity-50"
           >
             <PencilRuler size={24} strokeWidth={3} />

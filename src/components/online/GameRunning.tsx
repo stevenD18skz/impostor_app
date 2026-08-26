@@ -16,26 +16,26 @@ interface GameRunningProps {
   onEndGame: () => void;
 }
 
+/**
+ * Lo que queda de reloj. Se recalcula contra el ancla en vez de restar uno cada
+ * vuelta: si el teléfono se bloquea o la pestaña pasa a segundo plano, los
+ * intervalos se frenan y un contador que va restando se queda atrasado para
+ * siempre.
+ */
+const remaining = (timeLimit: number, startedAtLocal: number | null) =>
+  startedAtLocal === null
+    ? timeLimit
+    : Math.max(0, Math.round(timeLimit - (Date.now() - startedAtLocal) / 1000));
+
 export default function GameRunning({ order, timeLimit, startedAtLocal, onEndGame }: GameRunningProps) {
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
+  const [timeLeft, setTimeLeft] = useState(() => remaining(timeLimit, startedAtLocal));
   const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    if (startedAtLocal === null) {
-      setTimeLeft(timeLimit);
-      return;
-    }
-
-    // Se recalcula contra el ancla en vez de restar uno cada vuelta: si el
-    // teléfono se bloquea o la pestaña pasa a segundo plano, los intervalos se
-    // frenan y un contador que va restando se queda atrasado para siempre.
-    const tick = () => {
-      const elapsed = (Date.now() - startedAtLocal) / 1000;
-      setTimeLeft(Math.max(0, Math.round(timeLimit - elapsed)));
-    };
-
-    tick();
-    const interval = setInterval(tick, 250);
+    const interval = setInterval(
+      () => setTimeLeft(remaining(timeLimit, startedAtLocal)),
+      250,
+    );
     return () => clearInterval(interval);
   }, [startedAtLocal, timeLimit]);
 

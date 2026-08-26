@@ -1,153 +1,85 @@
-# Guía de Configuración de Supabase Realtime
+# Cómo funciona la sala online
 
-## ✅ Pasos para Habilitar Realtime
+> Para poner a andar el modo online, ver [`SUPABASE_SETUP.md`](./SUPABASE_SETUP.md).
+> Este documento explica el diseño, no la instalación.
 
-### 1. Habilitar Realtime en las Tablas
+## Cero consultas a la base de datos
 
-Debes habilitar Realtime en las tablas `rooms` y `players` en tu proyecto de Supabase.
+No hay tablas. La sala es un canal de Supabase Realtime llamado
+`impostor:<CÓDIGO>`, y todo pasa por ahí:
 
-#### Opción A: Desde el Dashboard de Supabase (Recomendado)
+| Pieza         | Para qué                                                              |
+| ------------- | --------------------------------------------------------------------- |
+| **Presence**  | Quién está conectado. Una sala existe mientras haya alguien dentro.    |
+| **Broadcast** | El estado del juego, ya resuelto, repartido por el anfitrión.          |
 
-1. Ve a tu proyecto en [https://supabase.com/dashboard](https://supabase.com/dashboard)
-2. Navega a **Database** → **Replication** (en el menú lateral)
-3. Encuentra las tablas `rooms` y `players` en la lista
-4. **Activa el toggle** para cada tabla en la columna "REALTIME"
-5. Las tablas deben mostrar un checkmark verde ✓
+La versión anterior sí usaba tablas: cada cambio disparaba un evento de
+`postgres_changes` y **cada** cliente respondía pidiendo la sala completa por
+HTTP. Con 8 jugadores, iniciar la partida costaba ~150 consultas. Ahora cuesta
+un mensaje.
 
-#### Opción B: Mediante SQL
+## Quién manda
 
-Ejecuta este SQL en el **SQL Editor** de tu proyecto Supabase:
+El anfitrión es el único que modifica el estado. Los demás le mandan
+**intenciones** (`start`, `ready`, `settings`, `end`, `reset`) y él devuelve el
+estado ya resuelto. Así no hay dos clientes decidiendo cosas distintas.
 
-```sql
--- Habilitar Realtime en la tabla rooms
-ALTER PUBLICATION supabase_realtime ADD TABLE rooms;
+Quién es el anfitrión sale de Presence, no de un campo guardado: quien crea la
+sala se declara `isHost`, y si cierra la pestaña el relevo lo toma el id más
+bajo de los que quedan. Como todos ven la misma lista, todos llegan al mismo
+nombre sin negociar.
 
--- Habilitar Realtime en la tabla players
-ALTER PUBLICATION supabase_realtime ADD TABLE players;
-```
+## Los eventos
 
-### 2. Verificar la Configuración
+| Evento   | Dirección        | Qué dice                                    |
+| -------- | ---------------- | ------------------------------------------- |
+| `state`  | anfitrión → todos | El estado completo. Repetirlo no rompe nada. |
+| `hello`  | recién llegado → anfitrión | «mándame el estado»                |
+| `intent` | cualquiera → anfitrión | «quiero hacer esto»                    |
 
-Para verificar que Realtime está habilitado, ejecuta:
+## Las rutas
 
-```sql
-SELECT schemaname, tablename 
-FROM pg_publication_tables 
-WHERE pubname = 'supabase_realtime';
-```
+| Ruta            | Qué hace                                                        |
+| --------------- | --------------------------------------------------------------- |
+| `/`             | Menú principal.                                                  |
+| `/local`        | Partida local, en un solo dispositivo.                           |
+| `/online`       | Nombre + crear o entrar. **No abre ningún canal.**               |
+| `/room/[code]`  | La sala. Es la única pantalla que se conecta.                    |
 
-Deberías ver:
-```
- schemaname | tablename 
-------------+-----------
- public     | rooms
- public     | players
-```
+Que el código esté en la URL es lo que hace la sala compartible: mandar
+`/room/ABC123` es mandar la sala, y un F5 cae donde estaba en vez de rebotar al
+menú. Quien abre el enlace sin haber pasado por el menú solo tiene que poner su
+nombre.
 
-### 3. Verificar en la Aplicación
+## Una trampa que costó cara
 
-Después de habilitar Realtime:
+`supabase.channel(topic)` **no** crea un canal nuevo si ya hay uno registrado con
+ese topic: devuelve el que estaba e **ignora la configuración** que se le pase. Y
+`removeChannel()` no lo saca de la lista al instante — lo hace cuando el servidor
+confirma la salida. En el medio queda un canal en estado `leaving`, y
+`subscribe()` sobre un canal que no está `closed` **no hace nada**: ni se une, ni
+llama al callback, ni devuelve error.
 
-1. Abre la consola del navegador (F12)
-2. Únete a una sala
-3. Deberías ver logs como:
-   ```
-   [Realtime] Subscribing to room: ABC123
-   [Realtime] Successfully subscribed to room updates
-   ```
+Con eso la sala moría en silencio: React monta el efecto, lo desmonta y lo vuelve
+a montar (StrictMode en desarrollo), o se venía de sondear ese mismo código antes
+de entrar. El segundo `supabase.channel()` devolvía el cadáver del primero, y la
+pantalla se quedaba en «Entrando a la sala...» para siempre — sin Presence y por
+lo tanto sin nadie declarado anfitrión.
 
-## 🔍 Cómo Funciona el Sistema Realtime
+Por eso `releaseTopic()` en `src/lib/room.ts` espera a que el topic quede
+realmente libre antes de volver a abrirlo, y por eso `/online` ya no sondea nada.
 
-### Sistema Anterior (Polling)
-- ⏱️ Actualizaciones cada 2 segundos
-- 📡 Peticiones HTTP constantes
-- ⚠️ Retraso de hasta 2 segundos
+## El cronómetro
 
-### Sistema Nuevo (Realtime)
-- ⚡ Actualizaciones instantáneas
-- 🔌 Conexión WebSocket persistente
-- ✅ Sin retraso perceptible
+El anfitrión anuncia **una sola vez** que la partida empezó; cada pantalla cuenta
+sola. Junto al estado viaja `now` (el `Date.now()` del anfitrión al enviar), y
+quien recibe resta `now - startedAt` —los dos del mismo reloj— para saber cuánto
+lleva corriendo. La diferencia entre relojes de aparatos distintos se cancela
+sola y nadie ve un cronómetro desfasado.
 
-### Flujo de Actualización
+## Qué NO es privado
 
-```
-1. Host presiona "Iniciar Juego"
-   ↓
-2. API actualiza tabla 'rooms' en Supabase
-   ↓
-3. Supabase emite evento de cambio vía WebSocket
-   ↓
-4. Hook useRealtimeRoom recibe el evento
-   ↓
-5. Hook llama a fetchRoomData()
-   ↓
-6. Todos los jugadores ven la actualización INSTANTÁNEAMENTE
-```
-
-## 🔧 Troubleshooting
-
-### Problema: No recibo actualizaciones en tiempo real
-
-1. **Verificar que Realtime está habilitado:**
-   - Revisa el Dashboard → Database → Replication
-   - Las tablas deben tener el toggle verde
-
-2. **Verificar políticas RLS:**
-   - Las políticas de seguridad deben permitir SELECT en ambas tablas
-   - Ya están configuradas en tu `supabase_schema.sql`
-
-3. **Verificar en la consola del navegador:**
-   - Busca logs de `[Realtime]`
-   - Busca errores de conexión
-
-4. **Verificar conexión a internet:**
-   - Realtime usa WebSockets, algunos firewalls pueden bloquearlos
-
-### Problema: "CHANNEL_ERROR" en consola
-
-Esto puede significar:
-- Realtime no está habilitado en las tablas
-- Hay un problema con las credenciales de Supabase
-- El plan gratuito de Supabase tiene límites (revisa tu cuota)
-
-### Problema: Las actualizaciones funcionan pero son lentas
-
-- Verifica tu conexión a internet
-- Supabase puede tener latencia según tu ubicación geográfica
-- El plan gratuito puede tener limitaciones de velocidad
-
-## 📊 Comparación de Rendimiento
-
-| Métrica | Polling (Antes) | Realtime (Ahora) |
-|---------|-----------------|------------------|
-| Latencia | 0-2000ms | ~50-200ms |
-| Peticiones HTTP | Alto | Bajo |
-| Uso de datos | Medio | Bajo |
-| Escalabilidad | Baja | Alta |
-| Complejidad | Simple | Media |
-
-## 🎯 Próximos Pasos Opcionales
-
-1. **Optimizar el refetch:**
-   - Actualmente, cada cambio hace un fetch completo
-   - Podrías optimizar para solo actualizar los datos cambiados
-
-2. **Agregar reconexión automática:**
-   - Si la conexión se pierde, intentar reconectar
-
-3. **Agregar indicador de conexión:**
-   - Mostrar al usuario si está conectado en tiempo real
-
-## ⚠️ Limitaciones del Plan Gratuito de Supabase
-
-- **Conexiones concurrentes:** Hasta 200 simultáneas
-- **Mensajes por mes:** 2 millones
-- **Bandwidth:** 5GB transferencia total
-
-Si tu aplicación crece, considera upgrade.
-
-## 📝 Notas Adicionales
-
-- Los eventos de Realtime solo incluyen IDs, por eso hacemos `fetchRoomData()`
-- Esto es normal y recomendado por Supabase
-- Para optimizar, podrías cachear datos y solo actualizar lo cambiado
+El estado viaja completo a todos los que estén en el canal: quien abra las
+herramientas de desarrollo puede ver la palabra y quién es el impostor. Taparlo
+de verdad pide que el reparto lo haga un servidor y que cada jugador solo pueda
+leer su propia carta.

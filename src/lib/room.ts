@@ -2,16 +2,7 @@
 //
 // No hay base de datos. La sala entera vive en un canal de Supabase Realtime
 // (Presence + Broadcast): pub/sub puro sobre WebSocket, sin tablas, sin RLS y
-// sin un endpoint que consultar. El código de sala ES el nombre del canal, del
-// mismo modo que en el escáner de códigos el identificador de emparejamiento es
-// lo único que hace falta para entrar.
-//
-// Por qué se fue la base de datos: antes cada cambio disparaba un evento de
-// postgres_changes y CADA cliente respondía pidiendo la sala completa por HTTP.
-// Con 8 jugadores, iniciar la partida costaba ~150 consultas y confirmar los
-// roles otras ~160. La cuenta era `1 escritura x N jugadores x 2 consultas`, y
-// crecía al cuadrado con la gente en la sala. Acá no hay ninguna: lo que viaja
-// es el estado ya armado, y viaja una sola vez.
+// sin un endpoint que consultar. El código de sala ES el nombre del canal.
 //
 // Quién manda: el host. Es el único que modifica el estado; los demás le mandan
 // intenciones y él reparte el resultado ya resuelto. Así no hay dos clientes
@@ -19,11 +10,8 @@
 //
 // Qué NO es privado: el estado viaja completo a todos los que estén en el canal,
 // así que quien abra las herramientas de desarrollo puede ver la palabra y quién
-// es el impostor. Es exactamente lo mismo que pasaba con la base de datos —la
-// respuesta de /api/game traía `is_impostor` de todos y `secretWord` a cada
-// jugador—, así que no se perdió nada por el camino. Taparlo de verdad pide que
-// el reparto lo haga un servidor y que cada quien pueda leer solo su propia
-// carta; se puede montar después sin tocar nada de esto.
+// es el impostor. Taparlo de verdad pide que el reparto lo haga un servidor y
+// que cada quien pueda leer solo su propia carta.
 
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from './supabase';
@@ -39,11 +27,20 @@ export function randomId(): string {
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin I/O/0/1: se dictan en voz alta
 
+export const CODE_LENGTH = 6;
+
 export function newRoomCode(): string {
-  const bytes = new Uint8Array(6);
+  const bytes = new Uint8Array(CODE_LENGTH);
   crypto.getRandomValues(bytes);
   return Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join('');
 }
+
+/** El código tal como se usa en la URL y como nombre de canal: mayúsculas, sin espacios. */
+export const normalizeCode = (raw: string) => raw.trim().toUpperCase();
+
+const CODE_RE = new RegExp('^[A-Z0-9]{' + CODE_LENGTH + '}$');
+
+export const isValidCode = (raw: string) => CODE_RE.test(normalizeCode(raw));
 
 /* ── Tipos ─────────────────────────────────────────────────────────────── */
 
@@ -56,9 +53,8 @@ export type Player = {
   /** Lo declara quien crea la sala. Si se va, ver `resolveHostId`. */
   isHost: boolean;
   /**
-   * Solo tiene sentido en la entrada del host, y existe para que alguien que
-   * apenas está sondeando la sala sepa si la partida ya arrancó sin tener que
-   * saludar y esperar respuesta.
+   * Solo tiene sentido en la entrada del host, y existe para que quien apenas
+   * está entrando sepa si la partida ya arrancó.
    */
   phase?: Phase;
 };
@@ -100,19 +96,44 @@ export type RoomState = {
   v: number;
 };
 
+export const MIN_PLAYERS = 3;
+
 export const DEFAULT_SETTINGS: Settings = {
   category: 'comida',
   numImpostors: 1,
   timeLimit: 180,
 };
 
+export const TIME_LIMITS = { min: 60, max: 600, step: 30 };
+
+/** Nunca todos impostores: tiene que quedar alguien que sepa la palabra. */
+export const maxImpostorsFor = (playerCount: number) =>
+  Math.max(1, Math.floor(Math.max(playerCount, MIN_PLAYERS) / 2));
+
+/** Recorta lo que llega por la red a un rango con sentido antes de guardarlo. */
+export function sanitizeSettings(
+  patch: Partial<Settings>,
+  base: Settings,
+  playerCount: number,
+): Settings {
+  const merged = { ...base, ...patch };
+  const time = Number.isFinite(merged.timeLimit) ? merged.timeLimit : base.timeLimit;
+  const impostors = Number.isFinite(merged.numImpostors) ? merged.numImpostors : base.numImpostors;
+  return {
+    category:
+      typeof merged.category === 'string' && merged.category ? merged.category : base.category,
+    numImpostors: Math.min(Math.max(Math.round(impostors), 1), maxImpostorsFor(playerCount)),
+    timeLimit: Math.min(Math.max(Math.round(time), TIME_LIMITS.min), TIME_LIMITS.max),
+  };
+}
+
 export function newRoomState(code: string): RoomState {
-  return { code, phase: 'lobby', settings: { ...DEFAULT_SETTINGS }, game: null, v: 0 };
+  return { code: normalizeCode(code), phase: 'lobby', settings: { ...DEFAULT_SETTINGS }, game: null, v: 0 };
 }
 
 /* ── Canal y eventos ───────────────────────────────────────────────────── */
 
-export const channelName = (code: string) => `impostor:${code.toUpperCase()}`;
+export const channelName = (code: string) => `impostor:${normalizeCode(code)}`;
 
 /** Host → todos: el estado completo. Es idempotente, así que repetirlo no rompe nada. */
 export const EV_STATE = 'state';
@@ -160,10 +181,13 @@ export function elapsedMs(payload: StatePayload): number {
  * distinto. El id es el mismo string para todos.
  */
 export function resolveHostId(players: Player[]): string | null {
-  const declared = players.find((p) => p.isHost);
-  if (declared) return declared.id;
+  // `players` ya viene ordenada por id, así que si por un instante dos declaran
+  // ser host —el creador volviendo de un F5 justo cuando otro tomó el relevo—
+  // todos eligen al mismo.
+  const declared = players.filter((p) => p.isHost);
+  if (declared.length) return declared[0].id;
   if (!players.length) return null;
-  return [...players].sort((a, b) => (a.id < b.id ? -1 : 1))[0].id;
+  return players[0].id;
 }
 
 /* ── Reparto de roles ──────────────────────────────────────────────────── */
@@ -179,7 +203,6 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 export function pickImpostors(players: Player[], numImpostors: number): Card[] {
-  // Nunca todos: si no queda ningún inocente no hay palabra que descubrir.
   const wanted = Math.max(1, Math.min(numImpostors, Math.max(1, players.length - 1)));
   return shuffle(players)
     .slice(0, wanted)
@@ -198,51 +221,7 @@ export function buildGame(players: Player[], settings: Settings, words: string[]
   };
 }
 
-/* ── Sondeo ────────────────────────────────────────────────────────────── */
-
-/**
- * Quién hay ahora mismo en una sala, sin entrar a ella.
- *
- * Es el reemplazo de "buscar la fila en la tabla `rooms`": una sala existe si
- * hay alguien dentro, igual que en el escáner. Se suscribe, espera el primer
- * `sync` de Presence —que llega también cuando la sala está vacía—, y se va.
- * Cero consultas.
- */
-export function probeRoom(code: string, timeoutMs = 6000): Promise<Player[]> {
-  return new Promise((resolve, reject) => {
-    let channel: RealtimeChannel | null = null;
-    let settled = false;
-
-    const finish = (fn: () => void) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      if (channel) supabase.removeChannel(channel);
-      fn();
-    };
-
-    const timer = setTimeout(
-      () => finish(() => reject(new Error('No se pudo contactar el servidor. Revisa tu conexión.'))),
-      timeoutMs,
-    );
-
-    channel = supabase.channel(channelName(code), {
-      // Sin `key` propia: acá no se hace `track`, solo se mira.
-      config: { broadcast: { self: false } },
-    });
-
-    channel.on('presence', { event: 'sync' }, () => {
-      const ch = channel;
-      if (ch) finish(() => resolve(readPresence(ch)));
-    });
-
-    channel.subscribe((status) => {
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        finish(() => reject(new Error('No se pudo contactar el servidor. Revisa tu conexión.')));
-      }
-    });
-  });
-}
+/* ── Presence ──────────────────────────────────────────────────────────── */
 
 /** La lista de Presence aplanada a jugadores, en orden estable por id. */
 export function readPresence(channel: RealtimeChannel): Player[] {
@@ -251,7 +230,7 @@ export function readPresence(channel: RealtimeChannel): Player[] {
   for (const entries of Object.values(state)) {
     for (const entry of entries) {
       // Si alguien abre dos pestañas con el mismo id, se queda una sola.
-      if (entry?.id && !byId.has(entry.id)) {
+      if (entry?.id && typeof entry.name === 'string' && !byId.has(entry.id)) {
         byId.set(entry.id, {
           id: entry.id,
           name: entry.name,
@@ -264,8 +243,39 @@ export function readPresence(channel: RealtimeChannel): Player[] {
   return [...byId.values()].sort((a, b) => (a.id < b.id ? -1 : 1));
 }
 
-export const nameTaken = (players: Player[], name: string) =>
-  players.some((p) => p.name.trim().toLowerCase() === name.trim().toLowerCase());
+/** ¿Ese nombre ya lo usa OTRO? El propio id se ignora: volver tras un F5 es legítimo. */
+export const nameTaken = (players: Player[], name: string, selfId?: string) =>
+  players.some((p) => p.id !== selfId && p.name.trim().toLowerCase() === name.trim().toLowerCase());
+
+/* ── Higiene de canales ────────────────────────────────────────────────── */
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Deja el topic libre antes de volver a abrirlo. Esto no es opcional.
+ *
+ * `supabase.channel(topic)` NO crea un canal nuevo si ya hay uno registrado con
+ * ese mismo topic: devuelve el que estaba, ignorando la configuración que se le
+ * pase. Y `removeChannel()` no lo saca de la lista al momento — lo hace recién
+ * cuando el servidor confirma la salida. En el medio queda un canal en estado
+ * `leaving`, y `subscribe()` sobre un canal que no está `closed` no hace
+ * absolutamente nada: ni se une, ni llama al callback, ni devuelve error.
+ *
+ * Así se moría la sala: React monta el efecto, lo desmonta y lo vuelve a montar
+ * (StrictMode en desarrollo), o se venía de sondear ese mismo código antes de
+ * entrar. El segundo `supabase.channel()` devolvía el cadáver del primero y la
+ * pantalla se quedaba en "Entrando a la sala..." para siempre, sin Presence y
+ * por lo tanto sin nadie declarado anfitrión.
+ */
+export async function releaseTopic(topic: string): Promise<void> {
+  const full = `realtime:${topic}`;
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const stale = supabase.getChannels().filter((c) => c.topic === full);
+    if (!stale.length) return;
+    await Promise.all(stale.map((c) => supabase.removeChannel(c).catch(() => undefined)));
+    await sleep(25);
+  }
+}
 
 /* ── Sesión guardada en el navegador ───────────────────────────────────── */
 
@@ -274,18 +284,35 @@ export const nameTaken = (players: Player[], name: string) =>
 
 const SESSION_KEY = 'impostor.session';
 
-export type Session = { code: string; playerId: string; name: string };
+export type Session = {
+  code: string;
+  playerId: string;
+  name: string;
+  /** Lo puso quien creó la sala. Es lo que lo hace anfitrión desde el primer instante. */
+  isHost: boolean;
+};
 
 export function readSession(): Session | null {
   try {
     const raw = window.localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (parsed?.code && parsed?.playerId && parsed?.name) return parsed as Session;
-    return null;
+    if (!parsed?.code || !parsed?.playerId || !parsed?.name) return null;
+    return {
+      code: normalizeCode(String(parsed.code)),
+      playerId: String(parsed.playerId),
+      name: String(parsed.name),
+      isHost: Boolean(parsed.isHost),
+    };
   } catch {
     return null;
   }
+}
+
+/** La sesión de ESTA sala, o `null` si la guardada es de otra. */
+export function readSessionFor(code: string): Session | null {
+  const saved = readSession();
+  return saved && saved.code === normalizeCode(code) ? saved : null;
 }
 
 export function writeSession(session: Session): void {
@@ -294,6 +321,36 @@ export function writeSession(session: Session): void {
   } catch {
     /* sin memoria: un F5 devuelve al menú, nada más */
   }
+}
+
+/* Lectura reactiva de la sesión, pensada para `useSyncExternalStore`: leer
+   localStorage es leer un sistema externo, no derivar estado de React. */
+
+let snapshotRaw: string | null = null;
+let snapshot: Session | null = null;
+
+export function getSessionSnapshot(): Session | null {
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(SESSION_KEY);
+  } catch {
+    raw = null;
+  }
+  // La identidad del objeto tiene que ser estable mientras el contenido no
+  // cambie, o el render entra en bucle.
+  if (raw !== snapshotRaw) {
+    snapshotRaw = raw;
+    snapshot = readSession();
+  }
+  return snapshot;
+}
+
+/** En el servidor no hay localStorage: nunca hay sesión guardada. */
+export const getServerSessionSnapshot = (): Session | null => null;
+
+export function subscribeSession(onChange: () => void): () => void {
+  window.addEventListener('storage', onChange);
+  return () => window.removeEventListener('storage', onChange);
 }
 
 export function clearSession(): void {

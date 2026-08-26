@@ -1,107 +1,64 @@
-# Guía de Configuración de Supabase
+# Configurar el modo online
 
-Esta guía te ayudará a conectar tu aplicación Impostor con Supabase.
+El modo online **no usa base de datos**. No hay tablas, ni RLS, ni SQL que
+ejecutar. La sala entera vive en un canal de Supabase Realtime:
 
-## 📋 Pasos para Configurar Supabase
+- **Presence** dice quién está en la sala. Una sala existe mientras haya alguien
+  dentro; quien cierra la pestaña desaparece solo.
+- **Broadcast** reparte el estado del juego. El anfitrión es el único que lo
+  modifica; los demás le mandan intenciones y él devuelve el resultado.
 
-### 1. Crear las Tablas en Supabase
+Por eso alcanza con dos variables de entorno.
 
-1. Ve a tu proyecto en [Supabase](https://supabase.com)
-2. En el panel lateral, haz clic en **SQL Editor**
-3. Copia y pega el contenido del archivo `supabase_schema.sql`
-4. Haz clic en **Run** para ejecutar el script
+## 1. Crear el proyecto en Supabase
 
-Esto creará:
-- Tabla `rooms` para almacenar las salas del juego
-- Tabla `players` para almacenar los jugadores
-- Índices para mejorar el rendimiento
-- Triggers para actualizar automáticamente `last_updated`
-- Políticas de seguridad (RLS)
+1. Entra a [supabase.com/dashboard](https://supabase.com/dashboard) y crea un
+   proyecto (el plan gratuito sirve de sobra).
+2. Ve a **Settings** (⚙️) → **API** y copia:
+   - **Project URL** → algo como `https://abcdefgh.supabase.co`
+   - **anon public** key
 
-### 2. Obtener las Credenciales de Supabase
+## 2. Crear `.env.local`
 
-1. En tu proyecto de Supabase, ve a **Settings** (⚙️) > **API**
-2. Copia los siguientes valores:
-   - **Project URL** (algo como `https://tu-proyecto.supabase.co`)
-   - **anon public** key (la clave pública)
-
-### 3. Configurar Variables de Entorno
-
-1. Crea un archivo `.env.local` en la raíz de tu proyecto
-2. Agrega las siguientes variables con tus credenciales:
+En la raíz del proyecto, junto a `package.json`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key-aqui
+NEXT_PUBLIC_SUPABASE_URL=https://abcdefgh.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
 ```
 
-> ⚠️ **Importante**: Nunca subas el archivo `.env.local` a Git. Ya está incluido en `.gitignore`
+Hay una plantilla en `.env.example`. El archivo está en `.gitignore`: no se sube
+al repositorio.
 
-### 4. Reiniciar el Servidor de Desarrollo
+> ⚠️ Sin este archivo la app avisa en pantalla («Modo online sin configurar») en
+> vez de quedarse cargando para siempre. El modo local funciona igual.
 
-Después de configurar las variables de entorno, reinicia tu servidor:
+## 3. Reiniciar el servidor
+
+Next.js lee las variables `NEXT_PUBLIC_*` al arrancar:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
-## 🗂️ Estructura de la Base de Datos
+## 4. Probarlo
 
-### Tabla `rooms`
-- `id`: UUID único de la sala
-- `code`: Código de 6 caracteres para unirse
-- `host`: Nombre del anfitrión
-- `game_state`: Estado del juego (setup, lobby, reveal, playing, ended)
-- `settings`: Configuración del juego (JSON)
-- `game_data`: Datos del juego en curso (JSON)
-- `created_at`: Fecha de creación
-- `last_updated`: Última actualización
+1. Abre `http://localhost:3000` → **ONLINE** → escribe tu nombre → **Crear Sala**.
+2. Caes en `/room/ABC123`. Deberías verte en la lista con la etiqueta **HOST**.
+3. Copia el enlace con el botón **Copiar enlace** y ábrelo en otra ventana (o en
+   el teléfono, usando la IP de tu máquina en vez de `localhost`). Solo hay que
+   poner un nombre.
+4. Con 3 jugadores, el anfitrión puede iniciar la partida.
 
-### Tabla `players`
-- `id`: UUID único del jugador
-- `room_id`: Referencia a la sala
-- `name`: Nombre del jugador
-- `is_host`: Si es el anfitrión
-- `is_impostor`: Si es impostor
-- `created_at`: Fecha de creación
+## Al desplegar (Vercel)
 
-## 🔄 Migración del Código
+Las mismas dos variables hay que cargarlas en **Project → Settings →
+Environment Variables**, y volver a desplegar para que el build las tome.
 
-El archivo `src/app/api/game/route.ts` ha sido actualizado para usar Supabase en lugar de almacenamiento en memoria.
+## Sobre la privacidad
 
-### Cambios principales:
-- ✅ Todas las operaciones ahora usan Supabase
-- ✅ Los datos persisten entre reinicios del servidor
-- ✅ Soporte para múltiples instancias del servidor
-- ✅ Mejor manejo de errores
-
-## 🧪 Verificar la Conexión
-
-Para verificar que todo funciona correctamente:
-
-1. Inicia tu aplicación: `npm run dev`
-2. Crea una nueva sala
-3. Ve a Supabase > **Table Editor** > `rooms`
-4. Deberías ver la sala creada
-
-## 🔒 Seguridad (Opcional)
-
-Las políticas de RLS actuales permiten todas las operaciones. Para producción, considera:
-
-1. Implementar autenticación de usuarios
-2. Restringir operaciones según el usuario
-3. Validar permisos del anfitrión
-
-Ejemplo de política más restrictiva:
-
-```sql
--- Solo el anfitrión puede actualizar la configuración
-CREATE POLICY "Only host can update settings" ON rooms
-  FOR UPDATE USING (auth.uid() = host_user_id);
-```
-
-## 📚 Recursos Adicionales
-
-- [Documentación de Supabase](https://supabase.com/docs)
-- [Supabase JavaScript Client](https://supabase.com/docs/reference/javascript/introduction)
-- [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
+El estado viaja completo a todos los que estén en el canal: quien abra las
+herramientas de desarrollo puede ver la palabra y quién es el impostor. Para
+taparlo de verdad haría falta que el reparto lo hiciera un servidor y que cada
+jugador solo pudiera leer su propia carta. Se puede montar después sin tocar
+nada de lo que hay hoy.

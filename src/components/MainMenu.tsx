@@ -1,20 +1,34 @@
-import { Users, Wifi, Settings, BarChart2, DollarSign, Megaphone } from 'lucide-react';
+import { Settings, BarChart2, DollarSign, Megaphone } from 'lucide-react';
 
 interface MainMenuProps {
   onLocalPlay: () => void;
   onOnlinePlay: () => void;
 }
 
-export default function MainMenu({ onLocalPlay, onOnlinePlay }: MainMenuProps) {
-  // Generate random blocky "stars" or particles for the background
-  const particles = Array.from({ length: 40 }).map((_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    animationDuration: `${Math.random() * 4 + 2}s`,
-    animationDelay: `${Math.random() * 2}s`,
-    size: Math.random() > 0.7 ? '4px' : '2px',
+/*
+  Las estrellas del fondo se sortean con una semilla fija, no con `Math.random()`.
+  Sorteadas al vuelo, el servidor y el navegador dibujaban posiciones distintas y
+  React tiraba un error de hidratación en cada carga del menú. Con la semilla
+  quieta, las dos mitades pintan exactamente lo mismo y el desorden se ve igual.
+*/
+const PARTICLES = (() => {
+  let seed = 20260826;
+  const next = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  return Array.from({ length: 40 }, (_, id) => ({
+    id,
+    left: `${(next() * 100).toFixed(3)}%`,
+    top: `${(next() * 100).toFixed(3)}%`,
+    animationDuration: `${(next() * 4 + 2).toFixed(3)}s`,
+    animationDelay: `${(next() * 2).toFixed(3)}s`,
+    size: next() > 0.7 ? '4px' : '2px',
   }));
+})();
+
+export default function MainMenu({ onLocalPlay, onOnlinePlay }: MainMenuProps) {
+  const particles = PARTICLES;
 
   return (
     <div className="relative w-full h-screen bg-slate-900 overflow-hidden flex flex-col items-center justify-center font-vt323 selection:bg-pink-600 selection:text-white">
@@ -64,7 +78,7 @@ export default function MainMenu({ onLocalPlay, onOnlinePlay }: MainMenuProps) {
               IMPOSTOR
             </h1>
             <h2 className="text-cyan-400 text-xl font-vt323 tracking-widest text-center mt-2 uppercase">
-              // Version 1.0.0
+              {'// Version 1.0.0'}
             </h2>
           </div>
         </div>
