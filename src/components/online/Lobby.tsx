@@ -1,7 +1,9 @@
 'use client';
 
-import { Users, Play, Settings, Home, Book, Drama, Clock, LogOut, Check, Link2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+  Users, Play, Settings, Home, Book, Drama, Clock, LogOut, Check, Link2, Share2,
+} from 'lucide-react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 
 import { categorias } from '@/lib/data';
 import NumberInput from '@/components/ui/NumberInput';
@@ -29,35 +31,82 @@ interface LobbyProps {
   leaving: boolean;
 }
 
-/** Copia el enlace de la sala; si el navegador no deja, cae al código a secas. */
-function ShareCode({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
+/*
+  Invitar a la sala. En el móvil abre la hoja de compartir del sistema, que es
+  de donde sale WhatsApp: el amigo recibe el mensaje y el enlace juntos, sin
+  tener que pegar nada. Donde no existe esa hoja —casi todo el escritorio— se
+  copia el enlace al portapapeles, que es lo que se podía hacer antes.
+*/
+type InviteState = 'idle' | 'copied' | 'failed';
+
+/*
+  Si el aparato sabe compartir es un dato del navegador, no del estado de React:
+  se lee con `useSyncExternalStore`, igual que la sesión guardada. El servidor
+  devuelve `false`, así que el HTML dice «Copiar enlace» y, ya en el cliente,
+  React cambia el texto a «Invitar» sin que la hidratación se queje.
+
+  La suscripción no hace nada a propósito: esto no cambia mientras la pantalla
+  está abierta, así que no hay nada a lo que apuntarse.
+*/
+const subscribeNever = () => () => {};
+const canShareNow = () => typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+const canShareOnServer = () => false;
+
+function InviteButton({ code }: { code: string }) {
+  const [state, setState] = useState<InviteState>('idle');
+  const canShare = useSyncExternalStore(subscribeNever, canShareNow, canShareOnServer);
 
   useEffect(() => {
-    if (!copied) return;
-    const t = setTimeout(() => setCopied(false), 2000);
+    if (state === 'idle') return;
+    const t = setTimeout(() => setState('idle'), 2500);
     return () => clearTimeout(t);
-  }, [copied]);
+  }, [state]);
 
-  const copy = async () => {
-    const link = typeof window !== 'undefined' ? window.location.href : code;
+  const invite = async () => {
+    const link = window.location.href;
+
+    if (canShare) {
+      try {
+        await navigator.share({
+          title: 'El Impostor',
+          text: `¡Únete a mi sala para jugar al Impostor! Código: ${code}`,
+          url: link,
+        });
+        // La hoja del sistema ya da su propio acuse; repetirlo aquí sobra.
+        return;
+      } catch (err) {
+        // Cerrar la hoja sin elegir a nadie no es un fallo: no hay que avisar.
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+        // Cualquier otro fallo cae al portapapeles, que aguanta más.
+      }
+    }
+
     try {
       await navigator.clipboard.writeText(link);
-      setCopied(true);
+      setState('copied');
     } catch {
-      // Sin portapapeles (http sin TLS, permisos): al menos que se pueda dictar.
-      setCopied(false);
+      // Sin portapapeles (http sin TLS, permiso denegado). El código está en
+      // pantalla justo encima, así que se invita a dictarlo en vez de callar.
+      setState('failed');
     }
   };
 
+  const { Icon, label, tone } = {
+    idle: canShare
+      ? { Icon: Share2, label: 'Invitar amigos', tone: 'bg-cyan-600 hover:bg-cyan-700' }
+      : { Icon: Link2, label: 'Copiar enlace', tone: 'bg-cyan-600 hover:bg-cyan-700' },
+    copied: { Icon: Check, label: '¡Enlace copiado!', tone: 'bg-emerald-600 hover:bg-emerald-700' },
+    failed: { Icon: Link2, label: `Dicta el código: ${code}`, tone: 'bg-slate-600 hover:bg-slate-700' },
+  }[state];
+
   return (
     <button
-      onClick={copy}
-      title="Copiar enlace de la sala"
-      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-(--color-detail) text-lg transition-all duration-300"
+      onClick={invite}
+      title={canShare ? 'Compartir el enlace de la sala' : 'Copiar el enlace de la sala'}
+      className={`flex items-center gap-2 px-6 py-3 rounded-xl cursor-pointer text-xl font-bold text-(--color-secondary) shadow-lg transition-all duration-300 ${tone}`}
     >
-      {copied ? <Check size={20} strokeWidth={3} /> : <Link2 size={20} strokeWidth={3} />}
-      {copied ? '¡Enlace copiado!' : 'Copiar enlace'}
+      <Icon size={24} strokeWidth={3} />
+      {label}
     </button>
   );
 }
@@ -103,7 +152,7 @@ export default function Lobby({
           <Home size={42} strokeWidth={3} />
           Sala: <span className="tracking-widest text-cyan-400">{code}</span>
         </h2>
-        <ShareCode code={code} />
+        <InviteButton code={code} />
         <p className="text-(--color-detail) text-lg">Esperando jugadores...</p>
       </header>
 
