@@ -9,8 +9,6 @@ export interface GameData {
     numPlayers: number;
     numImpostors: number;
     selectedCategory: string;
-    timeLimit: number;
-    noTimeLimit: boolean;
   };
   game: {
     players: Player[];
@@ -19,9 +17,5 @@ export interface GameData {
     playingOrder: Player[];
     currentPlayer: number;
     showRole: boolean;
-  };
-  timer: {
-    timeLeft: number;
-    isTimerRunning: boolean;
   };
 }

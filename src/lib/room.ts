@@ -46,23 +46,23 @@ export const isValidCode = (raw: string) => CODE_RE.test(normalizeCode(raw));
 
 export type Phase = 'lobby' | 'reveal' | 'playing' | 'ended';
 
-/** Un jugador tal como lo publica su propio navegador en Presence. */
+/**
+ * Un jugador tal como lo publica su propio navegador en Presence.
+ *
+ * Esto es todo lo que se publica, y a propósito: Presence es carísimo. El
+ * servidor corta el canal a las pocas actualizaciones (ver `track` en
+ * `useOnlineGame`), así que aquí no entra nada que cambie durante la partida.
+ */
 export type Player = {
   id: string;
   name: string;
   /** Lo declara quien crea la sala. Si se va, ver `resolveHostId`. */
   isHost: boolean;
-  /**
-   * Solo tiene sentido en la entrada del host, y existe para que quien apenas
-   * está entrando sepa si la partida ya arrancó.
-   */
-  phase?: Phase;
 };
 
 export type Settings = {
   category: string;
   numImpostors: number;
-  timeLimit: number;
 };
 
 export type Card = { id: string; name: string };
@@ -79,12 +79,6 @@ export type GameData = {
    */
   order: Card[];
   readyIds: string[];
-  timeLimit: number;
-  /**
-   * Cuándo empezó la cuenta regresiva, medido con el reloj DEL HOST. No se
-   * compara nunca contra el reloj de otro aparato: ver `elapsedMs`.
-   */
-  startedAt: number | null;
 };
 
 export type RoomState = {
@@ -101,10 +95,7 @@ export const MIN_PLAYERS = 3;
 export const DEFAULT_SETTINGS: Settings = {
   category: 'comida',
   numImpostors: 1,
-  timeLimit: 180,
 };
-
-export const TIME_LIMITS = { min: 60, max: 600, step: 30 };
 
 /** Nunca todos impostores: tiene que quedar alguien que sepa la palabra. */
 export const maxImpostorsFor = (playerCount: number) =>
@@ -117,13 +108,11 @@ export function sanitizeSettings(
   playerCount: number,
 ): Settings {
   const merged = { ...base, ...patch };
-  const time = Number.isFinite(merged.timeLimit) ? merged.timeLimit : base.timeLimit;
   const impostors = Number.isFinite(merged.numImpostors) ? merged.numImpostors : base.numImpostors;
   return {
     category:
       typeof merged.category === 'string' && merged.category ? merged.category : base.category,
     numImpostors: Math.min(Math.max(Math.round(impostors), 1), maxImpostorsFor(playerCount)),
-    timeLimit: Math.min(Math.max(Math.round(time), TIME_LIMITS.min), TIME_LIMITS.max),
   };
 }
 
@@ -148,24 +137,6 @@ export type Intent =
   | { action: 'ready'; playerId: string }
   | { action: 'end' }
   | { action: 'reset' };
-
-export type StatePayload = {
-  state: RoomState;
-  /**
-   * `Date.now()` del host en el instante del envío. Quien recibe puede sacar
-   * cuánto lleva corriendo el reloj restando contra `game.startedAt`, que es
-   * del mismo reloj: la diferencia entre relojes de aparatos distintos se
-   * cancela sola y nadie ve un cronómetro desfasado.
-   */
-  now: number;
-};
-
-/** Cuánto lleva corriendo la partida, con la resta hecha siempre en el reloj del host. */
-export function elapsedMs(payload: StatePayload): number {
-  const startedAt = payload.state.game?.startedAt;
-  if (!startedAt) return 0;
-  return Math.max(0, payload.now - startedAt);
-}
 
 /* ── Quién es el host ──────────────────────────────────────────────────── */
 
@@ -216,8 +187,6 @@ export function buildGame(players: Player[], settings: Settings, words: string[]
     impostors: pickImpostors(players, settings.numImpostors),
     order: shuffle(players).map((p) => ({ id: p.id, name: p.name })),
     readyIds: [],
-    timeLimit: settings.timeLimit,
-    startedAt: null,
   };
 }
 
@@ -235,7 +204,6 @@ export function readPresence(channel: RealtimeChannel): Player[] {
           id: entry.id,
           name: entry.name,
           isHost: Boolean(entry.isHost),
-          phase: entry.phase,
         });
       }
     }

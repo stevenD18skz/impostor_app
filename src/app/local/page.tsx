@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { categorias } from '@/lib/data';
 import SetupState from '@/app/local/components/SetupState';
 import NamesState from '@/app/local/components/NamesState';
@@ -18,8 +18,6 @@ const initialGameData: GameData = {
     numPlayers: DEFAULT_NUM_PLAYERS,
     numImpostors: 1,
     selectedCategory: 'comida',
-    timeLimit: 180,
-    noTimeLimit: false,
   },
   game: {
     players: [],
@@ -29,38 +27,11 @@ const initialGameData: GameData = {
     currentPlayer: 0,
     showRole: false,
   },
-  timer: {
-    timeLeft: 180,
-    isTimerRunning: false,
-  },
 };
 
 export default function LocalGame() {
   const [gameData, setGameData] = useState<GameData>(initialGameData);
   const router = useRouter();
-
-  useEffect(() => {
-    if (gameData.config.noTimeLimit) return;
-    let interval: string | number | NodeJS.Timeout | undefined;
-    if (gameData.timer.isTimerRunning && gameData.timer.timeLeft > 0) {
-      interval = setInterval(() => {
-        setGameData(prev => {
-          if (prev.timer.timeLeft <= 1) {
-            return {
-              ...prev,
-              gameState: 'ended',
-              timer: { ...prev.timer, timeLeft: 0, isTimerRunning: false }
-            };
-          }
-          return {
-            ...prev,
-            timer: { ...prev.timer, timeLeft: prev.timer.timeLeft - 1 }
-          };
-        });
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [gameData.timer.isTimerRunning, gameData.timer.timeLeft, gameData.config.noTimeLimit]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -69,12 +40,6 @@ export default function LocalGame() {
       setGameData(prev => ({
         ...prev,
         config: { ...prev.config, [name]: value }
-      }));
-    } else if (name === 'noTimeLimit') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setGameData(prev => ({
-        ...prev,
-        config: { ...prev.config, noTimeLimit: checked }
       }));
     } else if (name.startsWith('playerName-')) {
       const index = parseInt(name.split('-')[1]);
@@ -159,11 +124,6 @@ export default function LocalGame() {
           players,
           currentPlayer: 0,
           showRole: false
-        },
-        timer: {
-          ...prev.timer,
-          timeLeft: prev.config.noTimeLimit ? 0 : prev.config.timeLimit,
-          isTimerRunning: false
         }
       };
     });
@@ -185,11 +145,7 @@ export default function LocalGame() {
         return {
           ...prev,
           gameState: 'playing',
-          game: { ...prev.game, playingOrder: shuffled, showRole: false },
-          timer: {
-            ...prev.timer,
-            isTimerRunning: !prev.config.noTimeLimit
-          }
+          game: { ...prev.game, playingOrder: shuffled, showRole: false }
         };
       }
     });
@@ -205,17 +161,7 @@ export default function LocalGame() {
         ...initialGameData.game,
         playerNames: prev.game.playerNames,
       },
-      timer: {
-        timeLeft: prev.config.noTimeLimit ? 0 : prev.config.timeLimit,
-        isTimerRunning: false
-      }
     }));
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleBack = () => router.back();
@@ -224,13 +170,6 @@ export default function LocalGame() {
     setGameData(prev => ({
       ...prev,
       game: { ...prev.game, showRole: true }
-    }));
-  };
-
-  const handleTimerRunning = (running: boolean) => {
-    setGameData(prev => ({
-      ...prev,
-      timer: { ...prev.timer, isTimerRunning: running }
     }));
   };
 
@@ -296,10 +235,7 @@ export default function LocalGame() {
           {gameData.gameState === 'playing' && (
             <PlayingState
               gameData={gameData}
-              formatTime={formatTime}
-              setIsTimerRunning={handleTimerRunning}
               onEndGame={handleEndGame}
-              onResetGame={resetGame}
             />
           )}
 

@@ -69,13 +69,32 @@ lo tanto sin nadie declarado anfitrión.
 Por eso `releaseTopic()` en `src/lib/room.ts` espera a que el topic quede
 realmente libre antes de volver a abrirlo, y por eso `/online` ya no sondea nada.
 
-## El cronómetro
+## Presence es caro; Broadcast no
 
-El anfitrión anuncia **una sola vez** que la partida empezó; cada pantalla cuenta
-sola. Junto al estado viaja `now` (el `Date.now()` del anfitrión al enviar), y
-quien recibe resta `now - startedAt` —los dos del mismo reloj— para saber cuánto
-lleva corriendo. La diferencia entre relojes de aparatos distintos se cancela
-sola y nadie ve un cronómetro desfasado.
+No son dos sabores de lo mismo. Medido contra el proyecto real:
+
+| Envío                              | Resultado                              |
+| ---------------------------------- | -------------------------------------- |
+| 80 `broadcast` en el mismo instante | ni se inmuta                           |
+| 5 `track()` de Presence seguidos    | `Client presence rate limit exceeded` y **el servidor cierra el canal** |
+| 6 `track()` separados 2 segundos    | lo mismo: no es un límite por segundo, es casi una cuota |
+
+Y cuando el servidor cierra el canal, `realtime-js` lo marca `closed`, lo saca
+del socket y **no lo reintenta nunca**; aunque lo reintentara, no vuelve a mandar
+el `track()`, así que quedarías dentro del canal pero invisible en Presence.
+
+De ahí salen dos reglas:
+
+1. En Presence solo va la **identidad** (`id`, `name`, `isHost`) y se compara
+   antes de mandar: repetir lo mismo no dice nada nuevo y cuesta el canal. Todo
+   lo que cambia durante la partida viaja por Broadcast, que es barato.
+2. `CLOSED` **no** es benigno. Es como avisa el servidor de que te echó, así que
+   se rehace el canal entero (`relink` en `useOnlineGame`) con espera creciente.
+
+Así se caía la sala antes: el anfitrión republicaba su Presence en cada cambio
+de estado, cinco toques rápidos al ajuste de una sala bastaban para pasarse, y el
+que se pasaba se quedaba con la lista de jugadores congelada dentro de una sala
+donde ya nadie lo veía — mientras los demás coronaban anfitrión al siguiente.
 
 ## Qué NO es privado
 

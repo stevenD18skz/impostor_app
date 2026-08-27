@@ -13,7 +13,6 @@ import {
   buildGame,
   channelName,
   clearSession,
-  elapsedMs,
   nameTaken,
   newRoomState,
   normalizeCode,
@@ -30,7 +29,6 @@ import {
   type RoomState,
   type Session,
   type Settings,
-  type StatePayload,
 } from '@/lib/room';
 
 const cats = categorias as Record<string, { nombre: string; palabras: string[] }>;
@@ -56,8 +54,7 @@ function reduce(state: RoomState, intent: Intent, players: Player[]): RoomState 
       const settings = sanitizeSettings(intent.settings, state.settings, players.length);
       const same =
         settings.category === state.settings.category &&
-        settings.numImpostors === state.settings.numImpostors &&
-        settings.timeLimit === state.settings.timeLimit;
+        settings.numImpostors === state.settings.numImpostors;
       return same ? null : { ...state, settings };
     }
 
@@ -107,11 +104,17 @@ function advanceIfAllReady(state: RoomState, players: Player[]): RoomState {
   const present = players.filter((p) => game.order.some((o) => o.id === p.id)).map((p) => p.id);
   const pending = present.filter((id) => !game.readyIds.includes(id));
   if (pending.length > 0 || present.length === 0) return state;
-  return { ...state, phase: 'playing', game: { ...game, startedAt: Date.now() } };
+  return { ...state, phase: 'playing' };
 }
 
 /** Cuánto tarda en darse por vacía una sala que nadie contesta. */
 const EMPTY_ROOM_GRACE_MS = 2500;
+
+/** Cuántas veces seguidas se intenta rehacer el canal antes de rendirse. */
+const MAX_RELINKS = 8;
+
+/** Un canal que aguanta este rato se da por sano y borra los intentos fallidos. */
+const HEALTHY_AFTER_MS = 20000;
 
 export function useOnlineGame(rawCode: string) {
   const code = normalizeCode(rawCode);
@@ -124,6 +127,8 @@ export function useOnlineGame(rawCode: string) {
   /** Por qué no se pudo entrar: sala inexistente, nombre repetido, sin conexión. */
   const [joinError, setJoinError] = useState<string | null>(null);
   const [busy, setBusy] = useState<Record<string, boolean>>({});
+  /** Sube para rehacer el canal desde cero. Ver `relink`. */
+  const [link, setLink] = useState(0);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const stateRef = useRef<RoomState | null>(null);
@@ -131,26 +136,11 @@ export function useOnlineGame(rawCode: string) {
   const sessionRef = useRef<Session | null>(null);
   const hostIdRef = useRef<string | null>(null);
   const subscribedRef = useRef(false);
-
-  /**
-   * Cuándo empezó la cuenta regresiva según el reloj de ESTE aparato. El host
-   * manda su propio `startedAt` y el instante en que envió; restando los dos
-   * —ambos de su reloj— sale cuánto lleva corriendo, y eso sí se puede anclar
-   * localmente. Comparar el `startedAt` del host contra el `Date.now()` de otro
-   * teléfono daría un cronómetro corrido por la diferencia entre relojes.
-   */
-  const [startedAtLocal, setStartedAtLocal] = useState<number | null>(null);
-  const startedAtLocalRef = useRef<number | null>(null);
-
-  const anchorClock = useCallback((state: RoomState | null, elapsed: number | null) => {
-    const running = state?.phase === 'playing' && Boolean(state.game?.startedAt);
-    const next = running ? Date.now() - (elapsed ?? 0) : null;
-    // Un mismo arranque no se vuelve a anclar: reanclarlo en cada mensaje haría
-    // saltar el cronómetro con cada milisegundo de latencia.
-    if (running && startedAtLocalRef.current !== null) return;
-    startedAtLocalRef.current = next;
-    setStartedAtLocal(next);
-  }, []);
+  /** Este canal no es la primera entrada, sino la vuelta de una caída. */
+  const rejoinRef = useRef(false);
+  /** Si alguna vez llegamos a estar dentro de la sala con este nombre. */
+  const admittedOnceRef = useRef(false);
+  const relinkAttemptsRef = useRef(0);
 
   sessionRef.current = session;
   playersRef.current = players;
@@ -172,37 +162,19 @@ export function useOnlineGame(rawCode: string) {
     void channel.send({ type: 'broadcast', event, payload }).catch(() => undefined);
   }, []);
 
-  /**
-   * Sella el estado con la hora del host. Quien no es host y está reenviando su
-   * copia traduce su reloj al del host usando el ancla local, para que el
-   * cronómetro del que recibe no salte.
-   */
-  const stamp = useCallback((state: RoomState): StatePayload => {
-    const anchor = startedAtLocalRef.current;
-    const startedAt = state.game?.startedAt;
-    if (state.phase === 'playing' && startedAt && anchor) {
-      return { state, now: startedAt + (Date.now() - anchor) };
-    }
-    return { state, now: Date.now() };
+  const adopt = useCallback((state: RoomState) => {
+    stateRef.current = state;
+    setRoom(state);
   }, []);
-
-  const adopt = useCallback(
-    (state: RoomState, elapsed: number | null) => {
-      stateRef.current = state;
-      setRoom(state);
-      anchorClock(state, elapsed);
-    },
-    [anchorClock],
-  );
 
   /** Reparte el estado y lo aplica en casa. Solo lo llama el host. */
   const publish = useCallback(
     (next: RoomState) => {
       const stamped = { ...next, v: next.v + 1 };
-      adopt(stamped, 0);
-      emit(EV_STATE, stamp(stamped));
+      adopt(stamped);
+      emit(EV_STATE, stamped);
     },
-    [adopt, emit, stamp],
+    [adopt, emit],
   );
 
   /**
@@ -253,8 +225,14 @@ export function useOnlineGame(rawCode: string) {
     let recover: ReturnType<typeof setInterval> | null = null;
     let graceTimer: ReturnType<typeof setTimeout> | null = null;
     let silenceTimer: ReturnType<typeof setTimeout> | null = null;
+    let healthTimer: ReturnType<typeof setTimeout> | null = null;
+    let relinkTimer: ReturnType<typeof setTimeout> | null = null;
     /** Hasta no estar admitido no se publica presencia: primero se mira la sala. */
     let admitted = false;
+    /** Lo último publicado en Presence, para no repetirlo. Ver `track`. */
+    let tracked: string | null = null;
+    /** Firma del último roster visto, para no repartir el estado por triplicado. */
+    let lastRoster: string | null = null;
 
     const reject = (message: string) => {
       if (cancelled) return;
@@ -266,6 +244,35 @@ export function useOnlineGame(rawCode: string) {
       setStatus('idle');
       setJoinError(message);
       setSession(null);
+    };
+
+    /**
+     * Rehace el canal desde cero.
+     *
+     * Es el único camino de vuelta cuando el servidor nos echa. `realtime-js`
+     * marca el canal como `closed`, lo saca del socket y no lo reintenta nunca;
+     * y aunque lo reintentara, no vuelve a mandar el `track()`, así que
+     * quedaríamos dentro del canal pero invisibles en Presence para los demás.
+     */
+    const relink = () => {
+      if (cancelled || relinkTimer) return;
+      const attempt = relinkAttemptsRef.current++;
+      if (attempt >= MAX_RELINKS) {
+        setStatus('error');
+        return;
+      }
+      // Solo se salta la puerta quien ya estaba dentro. Si el canal se cayó
+      // antes de entrar, el reintento vuelve a pasar por las comprobaciones:
+      // que la sala exista y que el nombre esté libre.
+      rejoinRef.current = admittedOnceRef.current;
+      subscribedRef.current = false;
+      setStatus('connecting');
+      relinkTimer = setTimeout(
+        () => {
+          if (!cancelled) setLink((n) => n + 1);
+        },
+        Math.min(600 * 2 ** attempt, 8000),
+      );
     };
 
     const start = async () => {
@@ -284,18 +291,58 @@ export function useOnlineGame(rawCode: string) {
       channelRef.current = channel;
       subscribedRef.current = false;
 
-      const track = (asHost: boolean) =>
-        channel?.track({ id: playerId, name, isHost: asHost, phase: stateRef.current?.phase ?? 'lobby' });
+      /**
+       * Anunciarse en Presence, pero solo si de verdad cambió algo.
+       *
+       * Presence NO se parece a Broadcast. El servidor deja pasar decenas de
+       * mensajes de broadcast por segundo sin inmutarse, pero corta el canal a
+       * las pocas actualizaciones de Presence: contesta
+       * «Client presence rate limit exceeded» y cierra. Medido contra el
+       * proyecto real, cinco `track()` bastan para que te eche, aunque vayan
+       * separados por segundos.
+       *
+       * Por eso aquí solo se publica la identidad —id, nombre y si manda—, nada
+       * que cambie durante la partida, y por eso se compara antes de mandar:
+       * repetir lo mismo no dice nada nuevo y cuesta el canal.
+       */
+      const track = (asHost: boolean) => {
+        const payload: Player = { id: playerId, name, isHost: asHost };
+        const key = JSON.stringify(payload);
+        if (tracked === key) return;
+        tracked = key;
+        void channel
+          ?.track(payload)
+          .then((res) => {
+            // Si no llegó, que el siguiente intento pueda reintentarlo.
+            if (res !== 'ok' && tracked === key) tracked = null;
+          })
+          .catch(() => {
+            if (tracked === key) tracked = null;
+          });
+      };
 
       /** Decide si este navegador puede entrar, mirando quién había ANTES de anunciarse. */
       const admit = (roster: Player[]) => {
+        if (rejoinRef.current) {
+          // Volvemos de una caída del canal: ya estábamos dentro, no hay nada
+          // que validar y la sala no puede darse por muerta.
+          admitted = true;
+          if (graceTimer) {
+            clearTimeout(graceTimer);
+            graceTimer = null;
+          }
+          track(hostIdRef.current === playerId);
+          emit(EV_HELLO, { playerId });
+          return true;
+        }
+
         if (session.isHost) {
           // El que creó la sala llega con el tablero puesto.
           if (!stateRef.current || stateRef.current.code !== code) {
             stateRef.current = newRoomState(code);
           }
           admitted = true;
-          void track(true);
+          track(true);
           publish(stateRef.current);
           return true;
         }
@@ -321,7 +368,7 @@ export function useOnlineGame(rawCode: string) {
 
         admitted = true;
         if (graceTimer) clearTimeout(graceTimer);
-        void track(false);
+        track(false);
         emit(EV_HELLO, { playerId });
         return true;
       };
@@ -335,9 +382,20 @@ export function useOnlineGame(rawCode: string) {
         const roster = readPresence(channel);
 
         if (!admitted && !admit(roster)) return;
+        admittedOnceRef.current = true;
 
-        playersRef.current = roster;
-        setPlayers(roster);
+        // Un solo cambio de Presence llega por triplicado: el `leave`, el `join`
+        // y el `sync` del mismo movimiento. Sin esta firma, cada uno volvería a
+        // repartir el estado y a redibujar la lista sin que nada hubiera
+        // cambiado.
+        const signature = roster.map((p) => `${p.id}${p.isHost ? '*' : ''}`).join(',');
+        const rosterChanged = signature !== lastRoster;
+        lastRoster = signature;
+
+        if (rosterChanged) {
+          playersRef.current = roster;
+          setPlayers(roster);
+        }
 
         const nextHost = resolveHostId(roster);
         hostIdRef.current = nextHost;
@@ -347,14 +405,14 @@ export function useOnlineGame(rawCode: string) {
           // Decía ser anfitrión y no lo es: pasa cuando el creador vuelve de un
           // F5 y otro ya había tomado el relevo. Se baja la bandera para que no
           // queden dos declarados.
-          if (mine?.isHost) void track(false);
+          if (mine?.isHost) track(false);
           return;
         }
 
         // Me tocó mandar. Puede ser porque creé la sala o porque el host
         // anterior cerró la pestaña; en el segundo caso el tablero ya lo tengo,
         // porque todos guardan la última copia que repartió el host.
-        if (mine && !mine.isHost) void track(true);
+        if (mine && !mine.isHost) track(true);
 
         const current = stateRef.current;
         if (!current) return;
@@ -364,7 +422,7 @@ export function useOnlineGame(rawCode: string) {
         // confirmar.
         const advanced = advanceIfAllReady(current, roster);
         if (advanced !== current) publish(advanced);
-        else emit(EV_STATE, stamp(current));
+        else if (rosterChanged) emit(EV_STATE, current);
       };
 
       channel.on('presence', { event: 'sync' }, syncPresence);
@@ -372,13 +430,11 @@ export function useOnlineGame(rawCode: string) {
       channel.on('presence', { event: 'leave' }, syncPresence);
 
       channel.on('broadcast', { event: EV_STATE }, ({ payload }) => {
-        const data = payload as StatePayload;
-        const incoming = data?.state;
+        const incoming = payload as RoomState | undefined;
         if (!incoming || incoming.code !== code) return;
         // Un estado viejo que llega tarde no debe pisar al nuevo.
         if (stateRef.current && incoming.v < stateRef.current.v) return;
-        if (incoming.phase !== 'playing') startedAtLocalRef.current = null;
-        adopt(incoming, elapsedMs(data));
+        adopt(incoming);
       });
 
       channel.on('broadcast', { event: EV_HELLO }, ({ payload }) => {
@@ -390,7 +446,7 @@ export function useOnlineGame(rawCode: string) {
         // volvió con las manos vacías mientras la partida seguía.
         const iAmHost = hostIdRef.current === playerId;
         if (!iAmHost && asker !== hostIdRef.current) return;
-        emit(EV_STATE, stamp(current));
+        emit(EV_STATE, current);
       });
 
       channel.on('broadcast', { event: EV_INTENT }, ({ payload }) => {
@@ -407,6 +463,11 @@ export function useOnlineGame(rawCode: string) {
           subscribedRef.current = true;
           setStatus('connected');
           setJoinError(null);
+          // Un canal que aguanta un rato borra los intentos fallidos: así una
+          // caída de ahora no gasta el cupo de reintentos de dentro de una hora.
+          healthTimer = setTimeout(() => {
+            relinkAttemptsRef.current = 0;
+          }, HEALTHY_AFTER_MS);
           // Unido pero sin noticias de Presence: no hay forma de saber quién
           // está ni de entrar. Mejor decirlo que dejar la pantalla girando.
           silenceTimer = setTimeout(() => {
@@ -414,7 +475,11 @@ export function useOnlineGame(rawCode: string) {
           }, 8000);
         } else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
           subscribedRef.current = false;
-          if (state !== 'CLOSED') setStatus('error');
+          // `CLOSED` no es benigno: es como avisa el servidor de que nos echó
+          // del canal —pasarse con Presence es la forma más fácil de que pase—.
+          // Antes se ignoraba, y quien lo recibía se quedaba con la lista de
+          // jugadores congelada, dentro de una sala donde ya nadie lo veía.
+          relink();
         }
       });
 
@@ -442,24 +507,17 @@ export function useOnlineGame(rawCode: string) {
       if (recover) clearInterval(recover);
       if (graceTimer) clearTimeout(graceTimer);
       if (silenceTimer) clearTimeout(silenceTimer);
+      if (healthTimer) clearTimeout(healthTimer);
+      if (relinkTimer) clearTimeout(relinkTimer);
       subscribedRef.current = false;
       channelRef.current = null;
       if (channel) void supabase.removeChannel(channel);
     };
-    // `code` y la identidad son lo único que debe reabrir el canal.
+    // `code`, la identidad y `link` —rehacer el canal— son lo único que debe
+    // reabrirlo. Nada del estado de la partida entra aquí: reabrir el canal por
+    // un cambio de ajustes es justo lo que tumbaba la sala.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [code, session?.playerId, session?.name, session?.isHost, session?.code]);
-
-  /** El host mantiene su fase publicada en Presence, para que se vea desde fuera. */
-  useEffect(() => {
-    if (!isHost || !session || !room || status !== 'connected') return;
-    void channelRef.current?.track({
-      id: session.playerId,
-      name: session.name,
-      isHost: true,
-      phase: room.phase,
-    });
-  }, [isHost, room, session, status]);
+  }, [code, link, session?.playerId, session?.name, session?.isHost, session?.code]);
 
   /* ── Entrar y salir ──────────────────────────────────────────────────── */
 
@@ -469,8 +527,9 @@ export function useOnlineGame(rawCode: string) {
       const next: Session = { code, playerId: randomId(), name: name.trim(), isHost: asHost };
       setJoinError(null);
       stateRef.current = null;
-      startedAtLocalRef.current = null;
-      setStartedAtLocal(null);
+      rejoinRef.current = false;
+      admittedOnceRef.current = false;
+      relinkAttemptsRef.current = 0;
       setRoom(null);
       setPlayers([]);
       writeSession(next);
@@ -488,11 +547,12 @@ export function useOnlineGame(rawCode: string) {
     }
     clearSession();
     stateRef.current = null;
-    startedAtLocalRef.current = null;
+    rejoinRef.current = false;
+    admittedOnceRef.current = false;
+    relinkAttemptsRef.current = 0;
     setSession(null);
     setRoom(null);
     setPlayers([]);
-    setStartedAtLocal(null);
     setJoinError(null);
     setBusy({});
   }, []);
@@ -562,7 +622,6 @@ export function useOnlineGame(rawCode: string) {
     isSpectator,
     hasReady,
     revealTotal,
-    startedAtLocal,
     busy,
     // acciones
     enter,

@@ -1,4 +1,4 @@
-import { Book, Clock, Drama, HatGlasses, Infinity, WifiOff } from 'lucide-react';
+import { Book, Drama, HatGlasses, WifiOff } from 'lucide-react';
 import { categorias } from '@/lib/data';
 import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
 import NumberInput from '@/components/ui/NumberInput';
@@ -72,66 +72,6 @@ export default function SetupState({
           onIncrement={() => handleIncrement('numImpostors', Math.floor(config.numPlayers / 2))}
           onDecrement={() => handleDecrement('numImpostors', 1)}
         />
-
-        <div className="bg-slate-900 border-4 border-cyan-800 p-4 flex flex-col gap-4 rounded-none relative">
-          <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600"></div>
-          <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400"></div>
-          <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400"></div>
-          <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600"></div>
-
-          <label className="flex items-center justify-center gap-2 text-cyan-400 text-lg font-bold uppercase tracking-widest relative z-10">
-            <Clock size={20} strokeWidth={3} className="text-pink-500" />
-            Tiempo del Juego
-          </label>
-
-          {/* Toggle sin límite */}
-          <label className="flex items-center justify-center gap-3 cursor-pointer group relative z-10">
-            <div className="relative">
-              <input
-                type="checkbox"
-                name="noTimeLimit"
-                id="noTimeLimit"
-                checked={config.noTimeLimit}
-                onChange={handleChange}
-                className="sr-only"
-              />
-              <div className={`w-12 h-6 border-2 transition-all duration-300 rounded-none ${config.noTimeLimit ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-600'}`}>
-                <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white transition-transform duration-300 rounded-none ${config.noTimeLimit ? 'translate-x-6' : 'translate-x-0'}`} />
-              </div>
-            </div>
-            <span className="flex items-center gap-2 text-white font-vt323 text-xl uppercase">
-              <Infinity size={22} strokeWidth={3} className="text-cyan-400" />
-              Sin límite
-            </span>
-          </label>
-
-          <div className={`overflow-hidden transition-all duration-500 ease-in-out relative z-10 ${config.noTimeLimit ? 'max-h-0 opacity-0' : 'max-h-40 opacity-100'}`}>
-            <div className="number-input-wrapper pt-2">
-              <button
-                type="button"
-                onClick={() => handleDecrement('timeLimit', 60, 30)}
-                disabled={config.timeLimit <= 60 || config.noTimeLimit}
-                className="number-input-btn"
-              >
-                −
-              </button>
-              <div className="flex-1 text-center bg-slate-800 border-2 border-cyan-700 mx-2 py-2">
-                <p className="text-white text-4xl font-vt323">
-                  {Math.floor(config.timeLimit / 60)}:{String(config.timeLimit % 60).padStart(2, '0')}
-                </p>
-                <p className="text-cyan-400 text-sm font-vt323 uppercase tracking-widest">min : seg</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleIncrement('timeLimit', 600, 30)}
-                disabled={config.timeLimit >= 600 || config.noTimeLimit}
-                className="number-input-btn"
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
       </main>
 
       <footer className="flex gap-3 pt-2">

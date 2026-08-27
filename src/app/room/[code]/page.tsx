@@ -41,7 +41,6 @@ export default function RoomPage() {
     isSpectator,
     hasReady,
     revealTotal,
-    startedAtLocal,
     busy,
     enter,
     leaveRoom,
@@ -163,12 +162,7 @@ export default function RoomPage() {
       )}
 
       {phase === 'playing' && room.game && !isSpectator && (
-        <GameRunning
-          order={room.game.order}
-          timeLimit={room.game.timeLimit}
-          startedAtLocal={startedAtLocal}
-          onEndGame={endGame}
-        />
+        <GameRunning order={room.game.order} onEndGame={endGame} />
       )}
 
       {phase === 'ended' && room.game && (

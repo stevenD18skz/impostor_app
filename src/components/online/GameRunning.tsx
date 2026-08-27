@@ -1,51 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Crown, Gamepad2, GamepadDirectional, ListOrdered, BookOpenText, ChevronDown } from 'lucide-react';
 import type { Card } from '@/lib/room';
 
 interface GameRunningProps {
   order: Card[];
-  timeLimit: number;
-  /**
-   * El arranque de la cuenta, ya traducido al reloj de ESTE aparato por el hook.
-   * Nada de esto viaja por la red cada segundo: el host anuncia una sola vez que
-   * la partida empezó y cada pantalla cuenta sola. Sincronizar el cronómetro
-   * mensaje a mensaje sería mandar un evento por segundo y por jugador para
-   * mostrar un número que cualquiera puede calcular en casa.
-   */
-  startedAtLocal: number | null;
   onEndGame: () => void;
 }
 
-/**
- * Lo que queda de reloj. Se recalcula contra el ancla en vez de restar uno cada
- * vuelta: si el teléfono se bloquea o la pestaña pasa a segundo plano, los
- * intervalos se frenan y un contador que va restando se queda atrasado para
- * siempre.
- */
-const remaining = (timeLimit: number, startedAtLocal: number | null) =>
-  startedAtLocal === null
-    ? timeLimit
-    : Math.max(0, Math.round(timeLimit - (Date.now() - startedAtLocal) / 1000));
-
-export default function GameRunning({ order, timeLimit, startedAtLocal, onEndGame }: GameRunningProps) {
-  const [timeLeft, setTimeLeft] = useState(() => remaining(timeLimit, startedAtLocal));
+export default function GameRunning({ order, onEndGame }: GameRunningProps) {
   const [showInstructions, setShowInstructions] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(
-      () => setTimeLeft(remaining(timeLimit, startedAtLocal)),
-      250,
-    );
-    return () => clearInterval(interval);
-  }, [startedAtLocal, timeLimit]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const isOver = timeLeft <= 0;
 
   return (
     <div className="space-y-6 text-(--color-main)">
@@ -58,17 +21,6 @@ export default function GameRunning({ order, timeLimit, startedAtLocal, onEndGam
       </header>
 
       <main className="space-y-4">
-        <div className="p-4 rounded-2xl bg-white/10">
-          <p className="text-xl font-bold text-(--color-primary)">
-            {isOver ? '¡Se acabó el tiempo!' : 'Tiempo Restante'}
-          </p>
-          <p
-            className={`text-7xl font-bold ${timeLeft <= 30 ? 'text-pink-600 animate-pulse' : 'text-(--color-secondary)'}`}
-          >
-            {formatTime(timeLeft)}
-          </p>
-        </div>
-
         <div className="p-4 rounded-2xl bg-white/10">
           <p className="flex items-center justify-center gap-2 mb-4 text-xl font-bold text-(--color-primary)">
             <ListOrdered size={32} strokeWidth={2} />

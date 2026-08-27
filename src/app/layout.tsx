@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     template: "%s · El Impostor",
   },
   description:
-    "Uno de ustedes no conoce la palabra secreta. Descúbranlo antes de que se les acabe el tiempo.",
+    "Uno de ustedes no conoce la palabra secreta. Hablen, sospechen y descúbranlo.",
   openGraph: {
     siteName: "El Impostor",
     locale: "es_ES",

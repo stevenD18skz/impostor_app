@@ -1,7 +1,7 @@
 'use client';
 
 import {
-  Users, Play, Settings, Home, Book, Drama, Clock, LogOut, Check, Link2, Share2,
+  Users, Play, Settings, Home, Book, Drama, LogOut, Check, Link2, Share2,
 } from 'lucide-react';
 import { useState, useEffect, useSyncExternalStore } from 'react';
 
@@ -9,7 +9,6 @@ import { categorias } from '@/lib/data';
 import NumberInput from '@/components/ui/NumberInput';
 import {
   MIN_PLAYERS,
-  TIME_LIMITS,
   maxImpostorsFor,
   type Player,
   type Settings as RoomSettings,
@@ -239,31 +238,6 @@ export default function Lobby({
               />
             ) : (
               <ReadOnlyField label="Número de Impostores" icon={Drama} value={numImpostors} />
-            )}
-
-            {/* Tiempo del juego */}
-            {isHost ? (
-              <NumberInput
-                label="Tiempo del Juego (segundos)"
-                icon={Clock}
-                readOnly
-                name="timeLimit"
-                value={form.timeLimit}
-                min={TIME_LIMITS.min}
-                max={TIME_LIMITS.max}
-                step={TIME_LIMITS.step}
-                onChange={(e) => change({ timeLimit: parseInt(e.target.value, 10) })}
-                onIncrement={() =>
-                  form.timeLimit < TIME_LIMITS.max &&
-                  change({ timeLimit: Math.min(form.timeLimit + TIME_LIMITS.step, TIME_LIMITS.max) })
-                }
-                onDecrement={() =>
-                  form.timeLimit > TIME_LIMITS.min &&
-                  change({ timeLimit: Math.max(form.timeLimit - TIME_LIMITS.step, TIME_LIMITS.min) })
-                }
-              />
-            ) : (
-              <ReadOnlyField label="Tiempo del Juego (segundos)" icon={Clock} value={form.timeLimit} />
             )}
           </div>
         </div>
