@@ -22,6 +22,7 @@ const initialGameData: GameData = {
     custom: null,
     orderMode: 'lista',
     chaos: false,
+    allowPeek: true,
   },
   game: {
     players: [],

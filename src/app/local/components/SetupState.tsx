@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useSyncExternalStore } from 'react';
-import { Book, BookPlus, Drama, HatGlasses, ListOrdered, RotateCw, Tornado, WifiOff } from 'lucide-react';
+import { Book, BookPlus, Drama, Eye, HatGlasses, ListOrdered, RotateCw, Tornado, WifiOff } from 'lucide-react';
 
 import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
 import NumberInput from '@/components/ui/NumberInput';
@@ -62,6 +62,42 @@ const ORDER_HINT: Record<OrderMode, string> = {
   lista: 'Un turno numerado para cada quien.',
   circulo: 'Se sortea quién empieza y hacia qué lado sigue.',
 };
+
+/** El interruptor arcade: lo comparten «ver la carta» y el modo caos. */
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: string;
+}) {
+  return (
+    <label className="flex items-center justify-center gap-3 cursor-pointer">
+      <span className="relative">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          className="sr-only"
+        />
+        <span
+          className={`block w-12 h-6 border-2 transition-all duration-300 rounded-none ${
+            checked ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-600'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white transition-transform duration-300 rounded-none ${
+              checked ? 'translate-x-6' : 'translate-x-0'
+            }`}
+          />
+        </span>
+      </span>
+      <span className="text-white font-vt323 text-xl uppercase">{label}</span>
+    </label>
+  );
+}
 
 const CUSTOM_PREFIX = 'custom:';
 
@@ -196,33 +232,29 @@ export default function SetupState({
           </p>
         </Panel>
 
+        {/* Ver la carta en partida */}
+        <Panel>
+          <PanelLabel icon={Eye}>Ver la carta en partida</PanelLabel>
+          <Toggle
+            checked={config.allowPeek}
+            onChange={(allowPeek) => updateConfig({ allowPeek })}
+            label={config.allowPeek ? 'Permitido' : 'No se puede'}
+          />
+          <p className="text-slate-400 text-base font-vt323 text-center mt-3">
+            {config.allowPeek
+              ? 'Quien olvide su carta puede volver a mirarla eligiendo su nombre.'
+              : 'Una vez repartidas, las cartas no se vuelven a mirar.'}
+          </p>
+        </Panel>
+
         {/* Modo caos */}
         <Panel>
           <PanelLabel icon={Tornado}>Modo caos</PanelLabel>
-          <label className="flex items-center justify-center gap-3 cursor-pointer">
-            <span className="relative">
-              <input
-                type="checkbox"
-                checked={config.chaos}
-                onChange={(e) => updateConfig({ chaos: e.target.checked })}
-                className="sr-only"
-              />
-              <span
-                className={`block w-12 h-6 border-2 transition-all duration-300 rounded-none ${
-                  config.chaos ? 'bg-pink-600 border-pink-400' : 'bg-slate-800 border-slate-600'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white transition-transform duration-300 rounded-none ${
-                    config.chaos ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </span>
-            </span>
-            <span className="text-white font-vt323 text-xl uppercase">
-              {config.chaos ? 'Activado' : 'Desactivado'}
-            </span>
-          </label>
+          <Toggle
+            checked={config.chaos}
+            onChange={(chaos) => updateConfig({ chaos })}
+            label={config.chaos ? 'Activado' : 'Desactivado'}
+          />
           <p className="text-slate-400 text-base font-vt323 text-center mt-3">
             {config.chaos
               ? 'De vez en cuando, y sin avisar, una ronda rompe las reglas: todos impostores, ninguno, o la mitad.'

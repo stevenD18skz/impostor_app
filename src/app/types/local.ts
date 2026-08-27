@@ -17,6 +17,8 @@ export interface GameData {
     custom: CategoryWords | null;
     orderMode: OrderMode;
     chaos: boolean;
+    /** Si en partida se puede volver a mirar la propia carta. */
+    allowPeek: boolean;
   };
   game: {
     players: Player[];

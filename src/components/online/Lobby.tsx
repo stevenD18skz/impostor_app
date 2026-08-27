@@ -2,7 +2,7 @@
 
 import {
   Users, Play, Settings, Home, Book, Drama, LogOut, Check, Link2, Share2,
-  ListOrdered, RotateCw, Tornado, BookPlus,
+  ListOrdered, RotateCw, Tornado, BookPlus, Eye,
 } from 'lucide-react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
@@ -425,6 +425,24 @@ export default function Lobby({
                 value={form.orderMode}
                 options={ORDER_OPTIONS}
                 onChange={(orderMode) => change({ orderMode })}
+                disabled={!isHost}
+              />
+            </Field>
+
+            {/* Ver la carta en partida */}
+            <Field
+              label="Ver la carta en partida"
+              icon={Eye}
+              hint={
+                form.allowPeek
+                  ? 'Cada quien puede volver a mirar su propia carta durante la ronda, manteniéndola pulsada.'
+                  : 'Una vez repartidas, las cartas no se vuelven a mirar. Hay que acordarse.'
+              }
+            >
+              <Switch
+                checked={form.allowPeek}
+                onChange={(allowPeek) => change({ allowPeek })}
+                label={form.allowPeek ? 'Permitido' : 'No se puede'}
                 disabled={!isHost}
               />
             </Field>

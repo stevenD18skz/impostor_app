@@ -181,7 +181,9 @@ export default function PlayingState({ gameData, onEndGame }: PlayingStateProps)
           </Panel>
         )}
 
-        <PeekPanel players={players} secretWord={secretWord} categoryName={categoryName} />
+        {gameData.config.allowPeek && (
+          <PeekPanel players={players} secretWord={secretWord} categoryName={categoryName} />
+        )}
 
         {/* Instructions */}
         <div className="bg-slate-900 border-4 border-cyan-800 rounded-none overflow-hidden relative">

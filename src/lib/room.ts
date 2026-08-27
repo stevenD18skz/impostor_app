@@ -85,6 +85,8 @@ export type Settings = {
   orderMode: OrderMode;
   /** Deja que de vez en cuando salga una ronda torcida. Ver `rollVariant`. */
   chaos: boolean;
+  /** Si en partida se puede volver a mirar la propia carta. */
+  allowPeek: boolean;
 };
 
 export type Card = { id: string; name: string };
@@ -129,6 +131,7 @@ export const DEFAULT_SETTINGS: Settings = {
   numImpostors: 1,
   orderMode: 'lista',
   chaos: false,
+  allowPeek: true,
 };
 
 /** Cada cuánto, más o menos, el modo caos tuerce una ronda. */
@@ -154,7 +157,35 @@ export function sanitizeSettings(
     numImpostors: Math.min(Math.max(Math.round(impostors), 1), maxImpostorsFor(playerCount)),
     orderMode: merged.orderMode === 'circulo' ? 'circulo' : 'lista',
     chaos: Boolean(merged.chaos),
+    allowPeek: Boolean(merged.allowPeek),
   };
+}
+
+/**
+ * Una copia de los ajustes reducida a valores sueltos que se pueden comparar.
+ *
+ * El `Record<keyof Settings, ...>` es a propósito: si mañana se añade un ajuste
+ * y no se pone aquí, esto deja de compilar. No es paranoia — exactamente ese
+ * olvido (comparar solo la categoría y los impostores) hacía que el modo caos y
+ * el orden de turnos no llegaran nunca al resto de la sala.
+ */
+function comparableSettings(s: Settings): Record<keyof Settings, string | number | boolean> {
+  return {
+    category: s.category,
+    numImpostors: s.numImpostors,
+    orderMode: s.orderMode,
+    chaos: s.chaos,
+    allowPeek: s.allowPeek,
+    // Serializada: dos listas distintas nunca dan el mismo texto.
+    custom: s.custom ? JSON.stringify([s.custom.nombre, ...s.custom.palabras]) : '',
+  };
+}
+
+/** ¿Estos dos ajustes son el mismo? Mira TODOS los campos, no unos cuantos. */
+export function settingsEqual(a: Settings, b: Settings): boolean {
+  const left = comparableSettings(a);
+  const right = comparableSettings(b);
+  return (Object.keys(left) as (keyof Settings)[]).every((key) => left[key] === right[key]);
 }
 
 export function newRoomState(code: string): RoomState {

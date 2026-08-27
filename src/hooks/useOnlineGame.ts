@@ -23,6 +23,7 @@ import {
   resolveHostId,
   rollVariant,
   sanitizeSettings,
+  settingsEqual,
   writeSession,
   type Intent,
   type Phase,
@@ -51,10 +52,11 @@ function reduce(state: RoomState, intent: Intent, players: Player[]): RoomState 
     case 'settings': {
       if (state.phase !== 'lobby') return null;
       const settings = sanitizeSettings(intent.settings, state.settings, players.length);
-      const same =
-        settings.category === state.settings.category &&
-        settings.numImpostors === state.settings.numImpostors;
-      return same ? null : { ...state, settings };
+      // Se comparan TODOS los ajustes. Cuando esto miraba solo la categoría y
+      // los impostores, tocar el orden de turnos o el modo caos daba «no ha
+      // cambiado nada» y el cambio se tiraba sin publicarlo: el anfitrión lo
+      // veía un instante en su pantalla y nadie más se enteraba nunca.
+      return settingsEqual(settings, state.settings) ? null : { ...state, settings };
     }
 
     case 'start': {

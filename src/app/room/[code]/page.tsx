@@ -165,7 +165,7 @@ export default function RoomPage() {
         <GameRunning
           order={room.game.order}
           start={room.game.start}
-          card={myCard}
+          card={room.settings.allowPeek ? myCard : null}
           onEndGame={endGame}
         />
       )}
