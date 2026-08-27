@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { Player, GameData } from '@/app/types/local';
 import Image from 'next/image';
 import './styleLocal.css';
@@ -23,16 +22,13 @@ export default function RevealState({
 
   // isPeeking: carta volteada sólo mientras está presionada
   // hasRevealed: si ya vio la carta al menos una vez (activa el botón "Siguiente")
+  //
+  // No hace falta reiniciarlos al cambiar de jugador: la pantalla se remonta
+  // entera en cada turno —lleva `key` en `page.tsx`—, así que nacen limpios y
+  // es imposible que la carta de uno aparezca abierta para el siguiente.
   const [isPeeking, setIsPeeking] = useState(false);
   const [hasRevealed, setHasRevealed] = useState(false);
   const pressActive = useRef(false);
-
-  // Resetear estado local cada vez que cambia el jugador
-  useEffect(() => {
-    setIsPeeking(false);
-    setHasRevealed(false);
-    pressActive.current = false;
-  }, [gameData.game.currentPlayer]);
 
   const startPeek = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();

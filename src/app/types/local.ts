@@ -35,3 +35,14 @@ export interface GameData {
   /** Para no encadenar dos rondas caóticas seguidas. */
   lastWasChaos: boolean;
 }
+
+/**
+ * Lo mínimo que necesita un manejador de cambio de campo.
+ *
+ * Un `ChangeEvent` de React encaja aquí tal cual, y los botones de más y menos
+ * pueden llamarlo con un objeto normal en vez de fabricar un evento falso.
+ */
+export type FieldChange = { target: { name: string; value: string } };
+
+/** Los ajustes que son un número: los únicos con botones de más y menos. */
+export type NumericConfigField = 'numPlayers' | 'numImpostors';

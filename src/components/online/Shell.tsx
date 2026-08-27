@@ -45,11 +45,37 @@ export default function Shell({
   );
 }
 
+/*
+  Antes esto era un cuadrado con el borde de abajo transparente dando vueltas.
+  Sin esquinas redondeadas no se leía como un aro girando sino como una «U»
+  volteándose, que no dice «cargando» en ningún idioma.
+
+  Ahora son bloques que suben en ola, que es lo que hacía una máquina recreativa
+  mientras cargaba y encaja con el resto de la pantalla.
+*/
+const LOADER_BLOCKS = ['bg-cyan-400', 'bg-pink-500', 'bg-cyan-400', 'bg-pink-500', 'bg-cyan-400'];
+
 export function Loading({ message }: { message: string }) {
   return (
     <Shell>
-      <div className="animate-spin h-16 w-16 border-4 border-b-transparent border-cyan-400 mx-auto mb-6 mt-4" />
-      <p className="text-cyan-400 text-2xl font-press-start mb-4">{message}</p>
+      {/* `role="status"` para que un lector de pantalla anuncie la espera y su
+          motivo; los bloques son decoración y no se leen. */}
+      <div role="status" aria-live="polite" className="flex flex-col items-center gap-6 py-6">
+        <div className="flex items-end gap-2 h-10" aria-hidden="true">
+          {LOADER_BLOCKS.map((tone, i) => (
+            <span
+              key={i}
+              className={`pixel-loader-block w-4 h-4 ${tone}`}
+              style={{ animationDelay: `${i * 110}ms` }}
+            />
+          ))}
+        </div>
+        {/* Press Start 2P es una fuente ancha: a 24px «Entrando a la sala...»
+            se sale de un móvil estrecho. */}
+        <p className="text-cyan-400 text-base sm:text-xl font-press-start text-balance">
+          {message}
+        </p>
+      </div>
     </Shell>
   );
 }

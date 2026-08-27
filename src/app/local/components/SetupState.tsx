@@ -15,16 +15,16 @@ import {
   type CategoryWords,
 } from '@/lib/categories';
 import type { OrderMode } from '@/lib/room';
-import type { GameData } from '@/app/types/local';
+import type { FieldChange, GameData, NumericConfigField } from '@/app/types/local';
 import './styleLocal.css';
 
 type Config = GameData['config'];
 
 interface SetupStateProps {
   config: Config;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => void;
-  handleIncrement: (field: string, max: number, step?: number) => void;
-  handleDecrement: (field: string, min: number, step?: number) => void;
+  handleChange: (e: FieldChange) => void;
+  handleIncrement: (field: NumericConfigField, max: number, step?: number) => void;
+  handleDecrement: (field: NumericConfigField, min: number, step?: number) => void;
   /** Para los ajustes que no son un `<input name=...>`. */
   updateConfig: (patch: Partial<Config>) => void;
   onBack: () => void;

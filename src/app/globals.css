@@ -21,12 +21,49 @@
 
 @layer utilities {
   .pixel-borders {
-    box-shadow: 
+    box-shadow:
       -4px 0 0 0 currentColor,
       4px 0 0 0 currentColor,
       0 -4px 0 0 currentColor,
       0 4px 0 0 currentColor;
     margin: 4px;
+  }
+
+  /* Los bloques del indicador de carga. El desfase de cada uno se pone desde
+     el componente, que es lo que convierte cinco parpadeos en una ola. */
+  .pixel-loader-block {
+    animation: pixel-loader 1.1s ease-in-out infinite;
+  }
+}
+
+@keyframes pixel-loader {
+  0%,
+  60%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-14px);
+  }
+}
+
+/* A quien le molesta el movimiento se le sigue avisando de que algo pasa, pero
+   solo con luz: los bloques laten en el sitio sin desplazarse. */
+@media (prefers-reduced-motion: reduce) {
+  .pixel-loader-block {
+    animation: pixel-loader-fade 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes pixel-loader-fade {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
   }
 }
 

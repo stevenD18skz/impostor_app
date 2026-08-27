@@ -9,7 +9,7 @@ import RevealState from '@/app/local/components/RevealState';
 import PlayingState from '@/app/local/components/PlayingState';
 import EndedState from '@/app/local/components/EndedState';
 import { useRouter } from 'next/navigation';
-import { GameData } from '@/app/types/local';
+import type { FieldChange, GameData, NumericConfigField } from '@/app/types/local';
 
 const DEFAULT_NUM_PLAYERS = 4;
 
@@ -41,7 +41,7 @@ export default function LocalGame() {
   const [gameData, setGameData] = useState<GameData>(initialGameData);
   const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (e: FieldChange) => {
     const { name, value } = e.target;
 
     if (name === 'selectedCategory') {
@@ -207,19 +207,19 @@ export default function LocalGame() {
     setGameData(prev => ({ ...prev, gameState: 'ended' }));
   };
 
-  const handleIncrement = (field: string, max: number, step: number = 1) => {
-    const currentValue = gameData.config[field as keyof typeof gameData.config] as number;
+  const handleIncrement = (field: NumericConfigField, max: number, step: number = 1) => {
+    const currentValue = gameData.config[field];
     if (currentValue < max) {
       const newValue = Math.min(currentValue + step, max);
-      handleChange({ target: { name: field, value: newValue.toString() } } as any);
+      handleChange({ target: { name: field, value: String(newValue) } });
     }
   };
 
-  const handleDecrement = (field: string, min: number, step: number = 1) => {
-    const currentValue = gameData.config[field as keyof typeof gameData.config] as number;
+  const handleDecrement = (field: NumericConfigField, min: number, step: number = 1) => {
+    const currentValue = gameData.config[field];
     if (currentValue > min) {
       const newValue = Math.max(currentValue - step, min);
-      handleChange({ target: { name: field, value: newValue.toString() } } as any);
+      handleChange({ target: { name: field, value: String(newValue) } });
     }
   };
 
@@ -237,7 +237,6 @@ export default function LocalGame() {
           {gameData.gameState === 'names' && (
             <NamesState
               gameData={gameData}
-              handleChange={handleChange}
               onBack={handleBack}
               onContinue={goToSetup}
             />
@@ -257,6 +256,7 @@ export default function LocalGame() {
 
           {gameData.gameState === 'reveal' && (
             <RevealState
+              key={gameData.game.currentPlayer}
               gameData={gameData}
               setShowRole={handleShowRole}
               onNextPlayer={nextPlayer}

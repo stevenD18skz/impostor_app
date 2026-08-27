@@ -3,18 +3,17 @@
 import { useState } from 'react';
 import { UserRound, UsersRound, Plus, Trash2 } from 'lucide-react';
 import ButtonsGeneral from '@/components/ui/ButtonsGeneral';
+import type { GameData } from '@/app/types/local';
 import './styleLocal.css';
 
 interface NamesStateProps {
-  gameData: any;
-  handleChange: (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) => void;
+  gameData: GameData;
   onBack: () => void;
   onContinue: (names: string[]) => void;
 }
 
 export default function NamesState({
   gameData,
-  handleChange,
   onBack,
   onContinue
 }: NamesStateProps) {
