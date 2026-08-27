@@ -19,15 +19,15 @@ interface GameEndProps {
 */
 const CHAOS_COPY: Record<Exclude<Variant, 'normal'>, { titulo: string; detalle: string }> = {
   todos: {
-    titulo: '¡Todos eran impostores!',
+    titulo: '¡TODOS ERAN IMPOSTORES!',
     detalle: 'Nadie conocía la palabra. Estaban improvisando los unos para los otros.',
   },
   ninguno: {
-    titulo: 'No había ningún impostor',
+    titulo: 'NO HABÍA IMPOSTOR',
     detalle: 'Todos conocían la palabra. Toda esa desconfianza fue de gratis.',
   },
   mitad: {
-    titulo: 'La mitad de la sala era impostora',
+    titulo: 'LA MITAD ERAN IMPOSTORES',
     detalle: 'El doble de mentiras de lo que nadie esperaba.',
   },
 };
@@ -43,77 +43,99 @@ export default function GameEnd({
   const chaos = variant === 'normal' ? null : CHAOS_COPY[variant];
 
   return (
-    <div className="space-y-8">
-      <header className="flex items-center justify-center gap-2 text-4xl font-bold text-(--color-main)">
-        <Medal size={48} strokeWidth={2} />
-        <h2>¡Juego Terminado!</h2>
-        <Medal size={48} strokeWidth={2} />
+    <div className="flex flex-col gap-5 flex-1">
+      <header className="flex items-center justify-center gap-3 text-2xl font-press-start text-cyan-400 pt-2">
+        <Medal size={36} strokeWidth={3} className="text-pink-500" />
+        <h2 className="tracking-wider">TERMINADO</h2>
+        <Medal size={36} strokeWidth={3} className="text-pink-500" />
       </header>
 
-      {chaos && (
-        <section className="rounded-2xl p-6 border-2 border-fuchsia-400 bg-linear-to-br from-fuchsia-500/40 to-purple-900/40 space-y-2">
-          <p className="flex items-center justify-center gap-2 text-fuchsia-200 text-lg font-bold uppercase tracking-widest">
-            <Tornado size={24} strokeWidth={3} />
-            Ronda caótica
-            <Tornado size={24} strokeWidth={3} />
-          </p>
-          <p className="text-(--color-secondary) text-4xl font-bold">{chaos.titulo}</p>
-          <p className="text-fuchsia-100 text-lg">{chaos.detalle}</p>
-        </section>
-      )}
-
-      <main className="rounded-2xl p-8 space-y-6 bg-white/10">
-        <p className="mb-0 text-(--color-secondary) text-2xl">La palabra secreta era</p>
-        <p className="text-amber-500 text-5xl font-bold">{secretWord}</p>
-
-        {variant === 'ninguno' ? (
-          <p className="mb-0 text-(--color-secondary) text-2xl">
-            Y esta vez <strong className="text-pink-500">la sabían todos</strong>.
-          </p>
-        ) : (
-          <>
-            <p className="mb-0 text-(--color-secondary) text-2xl">
-              {many ? 'Los impostores eran' : 'El impostor era'}
+      <main className="flex flex-col gap-4 flex-1">
+        {chaos && (
+          <div className="bg-fuchsia-950 border-4 border-fuchsia-500 p-4 rounded-none text-center">
+            <p className="flex items-center justify-center gap-2 text-fuchsia-300 font-vt323 text-lg uppercase tracking-widest">
+              <Tornado size={20} strokeWidth={3} />
+              Ronda caótica
+              <Tornado size={20} strokeWidth={3} />
             </p>
-            {impostors.length ? (
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                {impostors.map((i) => (
-                  <span key={i.id} className="text-pink-500 text-5xl font-bold">
-                    {i.name}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-pink-500 text-5xl font-bold">Desconocido</p>
-            )}
-          </>
+            <p className="text-white font-press-start text-base md:text-xl mt-2">{chaos.titulo}</p>
+            <p className="text-fuchsia-200 font-vt323 text-lg mt-2">{chaos.detalle}</p>
+          </div>
         )}
 
-        <div className="pt-2 border-t border-white/20">
-          <p className="text-lg text-(--color-detail)">
+        {/* Secret word */}
+        <div className="bg-slate-900 border-4 border-cyan-800 p-5 rounded-none relative text-center">
+          <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600" />
+          <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400" />
+          <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400" />
+          <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600" />
+          <p className="text-cyan-400 font-vt323 text-xl uppercase tracking-widest mb-2">
+            La palabra secreta era
+          </p>
+          <p className="text-white font-press-start text-2xl md:text-3xl">{secretWord}</p>
+        </div>
+
+        {/* Impostors */}
+        <div className="bg-slate-900 border-4 border-cyan-800 p-5 rounded-none relative text-center">
+          <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600" />
+          <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400" />
+          <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400" />
+          <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600" />
+          {variant === 'ninguno' ? (
+            <>
+              <p className="text-cyan-400 font-vt323 text-xl uppercase tracking-widest mb-3">
+                Y esta vez la sabían
+              </p>
+              <span className="text-pink-500 font-press-start text-xl md:text-2xl drop-shadow-[2px_2px_0_#0f172a]">
+                TODOS
+              </span>
+            </>
+          ) : (
+            <>
+              <p className="text-cyan-400 font-vt323 text-xl uppercase tracking-widest mb-3">
+                {many ? `Los impostores eran (${impostors.length})` : 'El impostor era'}
+              </p>
+              {impostors.length ? (
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+                  {impostors.map((i, idx) => (
+                    <span key={i.id} className="text-pink-500 font-press-start text-xl md:text-2xl drop-shadow-[2px_2px_0_#0f172a]">
+                      {i.name}{idx < impostors.length - 1 ? ' &' : ''}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-pink-500 font-press-start text-xl md:text-2xl">Desconocido</p>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="bg-slate-800 border-2 border-cyan-900 p-4 rounded-none text-center">
+          <p className="text-lg font-vt323 text-slate-400 uppercase">
             {variant === 'ninguno'
               ? '¿A cuántos inocentes acusaron? 😅'
               : variant === 'todos'
                 ? '¿Alguien llegó a sospecharlo? 🤯'
                 : many
-                  ? '¿Adivinaron quiénes eran los impostores? 🤔'
+                  ? '¿Adivinaron a los impostores? 🤔'
                   : '¿Adivinaron quién era el impostor? 🤔'}
           </p>
         </div>
       </main>
 
-      <footer className="flex items-center justify-center gap-2">
+      <footer className="pt-2">
         {canReset ? (
           <button
             onClick={onReset}
-            className="flex flex-1 items-center justify-center gap-1 py-4 px-8 rounded-xl bg-slate-600 text-xl text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
+            className="group relative w-full flex items-center justify-center gap-3 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none cursor-pointer"
           >
-            <RotateCcw size={32} strokeWidth={3} />
-            Volver al Lobby
+            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-700 group-hover:bg-pink-400" />
+            <RotateCcw size={20} strokeWidth={3} className="text-pink-400 group-hover:text-white" />
+            VOLVER AL LOBBY
           </button>
         ) : (
-          <p className="text-(--color-detail) text-xl animate-pulse">
-            Esperando a que el anfitrión vuelva al lobby...
+          <p className="text-slate-400 text-lg font-vt323 text-center animate-pulse uppercase tracking-widest">
+            Esperando al anfitrión...
           </p>
         )}
       </footer>

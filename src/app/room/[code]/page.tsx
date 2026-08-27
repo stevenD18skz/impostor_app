@@ -69,10 +69,11 @@ export default function RoomPage() {
         </p>
         <button
           onClick={goHome}
-          className="flex items-center justify-center gap-2 mx-auto py-4 px-8 rounded-xl bg-slate-600 text-xl text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
+          className="group relative flex items-center justify-center gap-2 mx-auto py-4 px-6 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none cursor-pointer"
         >
-          <Home size={24} strokeWidth={3} />
-          Volver al menú
+          <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-800 group-hover:bg-cyan-400" />
+          <Home size={18} strokeWidth={3} />
+          VOLVER AL MENÚ
         </button>
       </Shell>
     );
@@ -104,10 +105,11 @@ export default function RoomPage() {
         </p>
         <button
           onClick={exit}
-          className="flex items-center justify-center gap-2 mx-auto py-4 px-8 rounded-xl bg-slate-600 text-xl text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
+          className="group relative flex items-center justify-center gap-2 mx-auto py-4 px-6 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none cursor-pointer"
         >
-          <Home size={24} strokeWidth={3} />
-          Volver al menú
+          <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-800 group-hover:bg-cyan-400" />
+          <Home size={18} strokeWidth={3} />
+          VOLVER AL MENÚ
         </button>
       </Shell>
     );
@@ -128,9 +130,10 @@ export default function RoomPage() {
           </p>
           <button
             onClick={exit}
-            className="py-4 px-8 rounded-xl bg-slate-600 text-xl text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
+            className="group relative flex items-center justify-center gap-2 mx-auto py-4 px-6 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none cursor-pointer"
           >
-            Salir de la sala
+            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-800 group-hover:bg-cyan-400" />
+            SALIR DE LA SALA
           </button>
         </div>
       )}

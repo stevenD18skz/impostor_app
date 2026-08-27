@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { BookPlus, Check, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { BookPlus, Check, Copy, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react';
 
 import {
   CATEGORY_LIMITS,
@@ -44,6 +44,33 @@ export default function CategoryEditor({ onClose, onUse, current }: CategoryEdit
   // haya que reiniciarlo a mano cada vez.
   const [draft, setDraft] = useState(EMPTY);
   const [error, setError] = useState<string | null>(null);
+  const [promptWordCount, setPromptWordCount] = useState<number>(50);
+  const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
+
+  const targetCategory = draft.nombre.trim() || 'General';
+  const aiPrompt = `Genera una lista de ${promptWordCount} palabras o elementos en español para jugar al Impostor sobre la categoría "${targetCategory}". Entrega únicamente las palabras separadas por comas o saltos de línea, sin números, sin viñetas ni texto adicional.`;
+
+  const copyPromptToClipboard = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(aiPrompt);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = aiPrompt;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
+      setCopiedPrompt(true);
+      setTimeout(() => setCopiedPrompt(false), 2500);
+    } catch (err) {
+      console.error('Error al copiar el prompt:', err);
+    }
+  };
   // Leer localStorage es leer un sistema externo, no derivar estado de React.
   // Además, guardar avisa a la lista sola: no hay nada que refrescar a mano.
   const saved = useSyncExternalStore(
@@ -187,6 +214,84 @@ export default function CategoryEditor({ onClose, onUse, current }: CategoryEdit
               placeholder="Ej: Cosas del salón"
               className="w-full px-4 py-3 text-2xl bg-slate-900 text-white border-2 border-cyan-700 placeholder-slate-600 focus:border-cyan-400 focus:outline-none transition-colors"
             />
+          </section>
+
+          <section className="p-3.5 sm:p-4 bg-slate-900/90 border-2 border-cyan-800/80 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-pink-400 font-bold text-lg">
+                <Sparkles size={20} className="shrink-0 animate-pulse text-pink-400" />
+                <span>Generar palabras con IA</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-slate-400 text-sm font-semibold uppercase tracking-wider">
+                  Cantidad:
+                </span>
+                <div className="flex items-center gap-1 bg-slate-950 p-1 border border-slate-700">
+                  {[30, 50, 80, 100].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setPromptWordCount(count)}
+                      className={`px-2.5 py-1 text-sm font-bold transition-all cursor-pointer ${
+                        promptWordCount === count
+                          ? 'bg-pink-600 border border-pink-400 text-white shadow-[0_0_8px_rgba(236,72,153,0.5)]'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      {count}
+                    </button>
+                  ))}
+                  <input
+                    type="number"
+                    min={CATEGORY_LIMITS.minPalabras}
+                    max={CATEGORY_LIMITS.maxPalabras}
+                    value={promptWordCount}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val)) {
+                        setPromptWordCount(Math.min(CATEGORY_LIMITS.maxPalabras, Math.max(1, val)));
+                      }
+                    }}
+                    aria-label="Cantidad de palabras para el prompt"
+                    title="Personalizar cantidad de palabras"
+                    className="w-14 px-1 py-0.5 text-center text-sm font-bold bg-slate-900 border border-slate-700 text-cyan-300 focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="relative bg-slate-950 border border-cyan-900/80 p-3 text-slate-300 text-sm font-mono leading-relaxed">
+              <p className="pr-36 break-words text-slate-300">
+                {aiPrompt}
+              </p>
+
+              <button
+                type="button"
+                onClick={copyPromptToClipboard}
+                className={`absolute top-2.5 right-2.5 flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold transition-all cursor-pointer ${
+                  copiedPrompt
+                    ? 'bg-emerald-600 border border-emerald-400 text-white'
+                    : 'bg-cyan-600 border border-cyan-400 text-white hover:bg-cyan-500 shadow-[0_0_10px_rgba(34,211,238,0.3)]'
+                }`}
+              >
+                {copiedPrompt ? (
+                  <>
+                    <Check size={16} strokeWidth={3} />
+                    ¡Copiado!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} strokeWidth={3} />
+                    Copiar prompt
+                  </>
+                )}
+              </button>
+            </div>
+
+            <p className="text-slate-400 text-xs sm:text-sm">
+              💡 Copia este prompt, pégalo en tu IA (ChatGPT, Claude, Gemini, etc.) y pega la respuesta en el campo &quot;Palabras&quot; de abajo.
+            </p>
           </section>
 
           <section className="space-y-2">

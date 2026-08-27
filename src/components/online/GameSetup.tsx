@@ -28,12 +28,25 @@ interface GameSetupProps {
   onJoin: (roomCode: string, playerName: string) => Promise<void>;
 }
 
+/** El marco arcade con esquinas decorativas. */
+function Panel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-slate-900 border-4 border-cyan-800 p-5 rounded-none relative">
+      <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600" />
+      <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400" />
+      <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400" />
+      <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
+
 function Separator() {
   return (
-    <div className="flex items-center gap-3 py-2 m-0 p-0">
-      <div className="flex-1 h-px bg-white/20 m-0 p-0" />
-      <span className="text-(--color-detail) text-sm font-semibold m-0 p-0">○</span>
-      <div className="flex-1 h-px bg-white/20 m-0 p-0" />
+    <div className="flex items-center gap-3 py-1">
+      <div className="flex-1 h-0.5 bg-slate-700" />
+      <span className="text-pink-500 font-vt323 text-lg">◇</span>
+      <div className="flex-1 h-0.5 bg-slate-700" />
     </div>
   );
 }
@@ -77,77 +90,80 @@ export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
   const isBusy = pending !== null;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col items-center">
-        <h1 className="flex items-center justify-center gap-1 text-(--color-main) text-5xl font-bold">
-          <HatGlasses size={64} />
-          EL IMPOSTOR
+    <div className="space-y-5">
+      <header className="flex flex-col items-center pt-2">
+        <h1 className="flex items-center justify-center gap-3 text-cyan-400 text-2xl md:text-3xl font-press-start tracking-wider">
+          <HatGlasses size={36} strokeWidth={3} className="text-pink-500" />
+          IMPOSTOR
         </h1>
-        <p className="flex items-center justify-center gap-1 text-(--color-detail) text-lg">
-          <Wifi size={24} />
-          Modo Online
+        <p className="flex items-center justify-center gap-2 text-slate-400 text-lg font-vt323 mt-2 uppercase tracking-widest">
+          <Wifi size={18} className="text-cyan-400" />
+          [ Modo Online ]
         </p>
       </header>
 
-      <main className="bg-white/10 rounded-2xl p-6 backdrop-blur space-y-4">
-        <div>
-          <label className="flex items-center justify-center gap-1 text-(--color-primary) text-2xl font-semibold mb-3">
-            <UserRound size={24} strokeWidth={3} />
-            Tu Nombre
-          </label>
-          <input
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            placeholder="Ej: Juan"
-            maxLength={20}
-            className="w-full px-4 py-3 text-xl bg-white/20 text-(--color-secondary) placeholder-purple-300 rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none"
-          />
-        </div>
-
-        <Separator />
-
-        <div className="pt-4 text-center">
-          <div className="flex gap-3">
+      <Panel>
+        <div className="space-y-4">
+          <div>
+            <label className="flex items-center justify-center gap-2 text-cyan-400 text-lg font-bold uppercase tracking-widest mb-3">
+              <UserRound size={20} strokeWidth={3} className="text-pink-500" />
+              Tu Nombre
+            </label>
             <input
               type="text"
-              value={roomCode}
-              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-              onKeyDown={(e) => e.key === 'Enter' && !isBusy && joinRoom()}
-              placeholder="CÓDIGO"
-              maxLength={CODE_LENGTH}
-              className="flex-1 min-w-0 px-4 py-3 text-xl bg-white/20 text-(--color-secondary) placeholder-purple-300 rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:border-(--color-primary) focus:outline-none uppercase tracking-widest"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              placeholder="Ej: Juan"
+              maxLength={20}
+              className="w-full px-4 py-3 text-2xl font-vt323 bg-slate-800 text-white placeholder-slate-500 border-2 border-cyan-700 rounded-none focus:border-cyan-400 focus:outline-none transition-colors"
             />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === 'Enter' && !isBusy && joinRoom()}
+                placeholder="CÓDIGO"
+                maxLength={CODE_LENGTH}
+                className="flex-1 min-w-0 px-4 py-3 text-2xl font-vt323 bg-slate-800 text-white placeholder-slate-500 border-2 border-cyan-700 rounded-none focus:border-cyan-400 focus:outline-none transition-colors uppercase tracking-widest"
+              />
+              <button
+                onClick={joinRoom}
+                disabled={isBusy}
+                className="group relative flex items-center justify-center gap-2 py-3 px-5 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
+              >
+                <DoorOpen size={18} strokeWidth={3} />
+                {pending === 'join' ? '...' : 'ENTRAR'}
+              </button>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div>
             <button
-              onClick={joinRoom}
+              onClick={createRoom}
               disabled={isBusy}
-              className="flex items-center justify-center gap-1 py-3 px-6 rounded-xl text-xl bg-cyan-600 text-(--color-secondary) font-bold hover:bg-cyan-700 transition-all duration-300 shadow-lg disabled:opacity-50"
+              className="group relative w-full flex items-center justify-center gap-2 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
             >
-              <DoorOpen size={24} strokeWidth={3} />
-              {pending === 'join' ? 'Uniendo...' : 'Entrar'}
+              <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-700 group-hover:bg-pink-400" />
+              <PencilRuler size={18} strokeWidth={3} />
+              {pending === 'create' ? 'CREANDO...' : 'CREAR SALA'}
             </button>
           </div>
+
+          {error && (
+            <div className="bg-pink-600/20 border-2 border-pink-500 text-pink-100 text-lg font-vt323 p-3 rounded-none text-center">
+              ⚠️ {error} ⚠️
+            </div>
+          )}
         </div>
-
-        <Separator />
-
-        <div className="pt-4 text-center">
-          <button
-            onClick={createRoom}
-            disabled={isBusy}
-            className="flex flex-1 items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300 shadow-lg disabled:opacity-50"
-          >
-            <PencilRuler size={24} strokeWidth={3} />
-            {pending === 'create' ? 'Creando sala...' : 'Crear Sala'}
-          </button>
-        </div>
-
-        {error && (
-          <div className="bg-red-500/20 border-2 border-red-500 text-red-100 text-lg p-4 rounded-xl text-center">
-            ⚠️ {error} ⚠️
-          </div>
-        )}
-      </main>
+      </Panel>
     </div>
   );
 }

@@ -35,49 +35,60 @@ export default function JoinRoom({ code, error, onEnter, onBack }: JoinRoomProps
   const message = localError || error;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col items-center">
-        <h1 className="text-(--color-main) text-4xl font-bold">Entrar a la sala</h1>
-        <p className="text-cyan-400 text-5xl font-press-start tracking-widest mt-4">{code}</p>
+    <div className="space-y-5">
+      <header className="flex flex-col items-center pt-2">
+        <h1 className="text-cyan-400 text-2xl md:text-3xl font-press-start tracking-wider">
+          ENTRAR A LA SALA
+        </h1>
+        <p className="text-cyan-400 text-3xl sm:text-4xl font-press-start tracking-widest mt-4">{code}</p>
       </header>
 
-      <main className="bg-white/10 rounded-2xl p-6 backdrop-blur space-y-4">
-        <label className="flex items-center justify-center gap-1 text-(--color-primary) text-2xl font-semibold">
-          <UserRound size={24} strokeWidth={3} />
-          Tu Nombre
-        </label>
-        <input
-          type="text"
-          value={name}
-          autoFocus
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && submit()}
-          placeholder="Ej: Juan"
-          className="w-full px-4 py-3 text-xl bg-white/20 text-(--color-secondary) placeholder-purple-300 rounded-xl focus:ring-2 focus:ring-(--color-primary) focus:outline-none"
-        />
+      <div className="bg-slate-900 border-4 border-cyan-800 p-5 rounded-none relative space-y-4">
+        <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600" />
+        <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400" />
+        <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400" />
+        <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600" />
 
-        <button
-          onClick={submit}
-          className="flex items-center justify-center gap-1 py-4 px-8 w-full rounded-xl text-xl bg-pink-600 text-(--color-secondary) font-bold hover:bg-pink-700 transition-all duration-300"
-        >
-          <DoorOpen size={24} strokeWidth={3} />
-          Entrar
-        </button>
+        <div className="relative z-10 space-y-4">
+          <label className="flex items-center justify-center gap-2 text-cyan-400 text-lg font-bold uppercase tracking-widest">
+            <UserRound size={20} strokeWidth={3} className="text-pink-500" />
+            Tu Nombre
+          </label>
+          <input
+            type="text"
+            value={name}
+            autoFocus
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && submit()}
+            placeholder="Ej: Juan"
+            className="w-full px-4 py-3 text-2xl font-vt323 bg-slate-800 text-white placeholder-slate-500 border-2 border-cyan-700 rounded-none focus:border-cyan-400 focus:outline-none transition-colors"
+          />
 
-        {message && (
-          <div className="bg-red-500/20 border-2 border-red-500 text-red-100 text-lg p-4 rounded-xl text-center">
-            ⚠️ {message} ⚠️
-          </div>
-        )}
+          <button
+            onClick={submit}
+            className="group relative w-full flex items-center justify-center gap-2 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 cursor-pointer"
+          >
+            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-700 group-hover:bg-pink-400" />
+            <DoorOpen size={18} strokeWidth={3} />
+            ENTRAR
+          </button>
 
-        <button
-          onClick={onBack}
-          className="flex items-center justify-center gap-1 py-3 px-6 w-full rounded-xl text-lg bg-slate-600 text-(--color-secondary) font-bold hover:bg-slate-700 transition-all duration-300"
-        >
-          <Home size={20} strokeWidth={3} />
-          Volver al menú
-        </button>
-      </main>
+          {message && (
+            <div className="bg-pink-600/20 border-2 border-pink-500 text-pink-100 text-lg font-vt323 p-3 rounded-none text-center">
+              ⚠️ {message} ⚠️
+            </div>
+          )}
+
+          <button
+            onClick={onBack}
+            className="group relative w-full flex items-center justify-center gap-2 py-3 px-6 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 cursor-pointer"
+          >
+            <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-800 group-hover:bg-cyan-400" />
+            <Home size={18} strokeWidth={3} />
+            VOLVER AL MENÚ
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
