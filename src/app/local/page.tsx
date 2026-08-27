@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { categorias } from '@/lib/data';
+import { resolveCategory } from '@/lib/categories';
+import { impostorsFor, rollVariant, shuffle } from '@/lib/room';
 import SetupState from '@/app/local/components/SetupState';
 import NamesState from '@/app/local/components/NamesState';
 import RevealState from '@/app/local/components/RevealState';
@@ -18,15 +19,22 @@ const initialGameData: GameData = {
     numPlayers: DEFAULT_NUM_PLAYERS,
     numImpostors: 1,
     selectedCategory: 'comida',
+    custom: null,
+    orderMode: 'lista',
+    chaos: false,
   },
   game: {
     players: [],
     playerNames: Array(DEFAULT_NUM_PLAYERS).fill(''),
     secretWord: '',
+    categoryName: '',
     playingOrder: [],
     currentPlayer: 0,
     showRole: false,
+    start: null,
+    variant: 'normal',
   },
+  lastWasChaos: false,
 };
 
 export default function LocalGame() {
@@ -95,35 +103,41 @@ export default function LocalGame() {
   // Setup → Reveal (start game)
   const startGame = () => {
     setGameData(prev => {
-      // @ts-ignore
-      const palabras: string[] = categorias[prev.config.selectedCategory].palabras;
-      const word = palabras[Math.floor(Math.random() * palabras.length)];
+      const category = resolveCategory({
+        category: prev.config.selectedCategory,
+        custom: prev.config.custom,
+      });
+      if (!category) return prev;
 
-      const playerRoles = Array(prev.config.numPlayers).fill(false);
-      const impostorIndices: number[] = [];
+      const word = category.palabras[Math.floor(Math.random() * category.palabras.length)];
 
-      while (impostorIndices.length < prev.config.numImpostors) {
-        const idx = Math.floor(Math.random() * prev.config.numPlayers);
-        if (!impostorIndices.includes(idx)) {
-          impostorIndices.push(idx);
-          playerRoles[idx] = true;
-        }
-      }
+      // El modo caos puede torcer la ronda: repartir a todos, a nadie o a la
+      // mitad. Fuera de eso reparte lo que diga la configuración.
+      const variant = rollVariant(prev.config.numPlayers, prev.config, prev.lastWasChaos);
+      const wanted = impostorsFor(variant, prev.config.numPlayers, prev.config);
 
-      const players = playerRoles.map((isImpostor, idx) => ({
-        isImpostor,
+      const seats = shuffle(
+        Array.from({ length: prev.config.numPlayers }, (_, i) => i),
+      ).slice(0, wanted);
+
+      const players = Array.from({ length: prev.config.numPlayers }, (_, idx) => ({
+        isImpostor: seats.includes(idx),
         name: prev.game.playerNames[idx] || `Jugador ${idx + 1}`
       }));
 
       return {
         ...prev,
         gameState: 'reveal',
+        lastWasChaos: variant !== 'normal',
         game: {
           ...prev.game,
           secretWord: word,
+          categoryName: category.nombre,
           players,
           currentPlayer: 0,
-          showRole: false
+          showRole: false,
+          start: null,
+          variant,
         }
       };
     });
@@ -141,11 +155,22 @@ export default function LocalGame() {
           }
         };
       } else {
-        const shuffled = [...prev.game.players].sort(() => Math.random() - 0.5);
+        const shuffled = shuffle(prev.game.players);
         return {
           ...prev,
           gameState: 'playing',
-          game: { ...prev.game, playingOrder: shuffled, showRole: false }
+          game: {
+            ...prev.game,
+            playingOrder: shuffled,
+            showRole: false,
+            start:
+              prev.config.orderMode === 'circulo'
+                ? {
+                    name: shuffled[0].name,
+                    dir: Math.random() < 0.5 ? 'horario' : 'antihorario',
+                  }
+                : null,
+          }
         };
       }
     });
@@ -157,12 +182,17 @@ export default function LocalGame() {
       ...initialGameData,
       gameState: 'setup',
       config: prev.config,
+      lastWasChaos: prev.lastWasChaos,
       game: {
         ...initialGameData.game,
         playerNames: prev.game.playerNames,
       },
     }));
   };
+
+  /** Para los ajustes que no vienen de un `<input name=...>`: interruptores y elecciones. */
+  const updateConfig = (patch: Partial<GameData['config']>) =>
+    setGameData(prev => ({ ...prev, config: { ...prev.config, ...patch } }));
 
   const handleBack = () => router.back();
 
@@ -219,6 +249,7 @@ export default function LocalGame() {
               handleChange={handleChange}
               handleIncrement={handleIncrement}
               handleDecrement={handleDecrement}
+              updateConfig={updateConfig}
               onBack={() => setGameData(prev => ({ ...prev, gameState: 'names' }))}
               onContinue={startGame}
             />
@@ -243,6 +274,7 @@ export default function LocalGame() {
             <EndedState
               secretWord={gameData.game.secretWord}
               players={gameData.game.players}
+              variant={gameData.game.variant}
               onResetGame={resetGame}
             />
           )}

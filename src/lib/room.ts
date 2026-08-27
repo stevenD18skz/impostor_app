@@ -15,6 +15,7 @@
 
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { sanitizeCategoryWords, type CategoryWords } from './categories';
 
 /* ── Identidad ─────────────────────────────────────────────────────────── */
 
@@ -60,17 +61,38 @@ export type Player = {
   isHost: boolean;
 };
 
+/** Cómo se anuncia el turno: una lista numerada, o quién empieza y hacia dónde. */
+export type OrderMode = 'lista' | 'circulo';
+
+/** Hacia dónde va la ronda cuando se juega en círculo. */
+export type Direction = 'horario' | 'antihorario';
+
+/**
+ * La torcedura de una ronda caótica.
+ *
+ * `normal` es el juego de siempre. Las otras tres rompen la regla básica —que
+ * hay un impostor y solo él ignora la palabra— sin avisar a nadie: cada
+ * jugador ve una carta que parece perfectamente corriente.
+ */
+export type Variant = 'normal' | 'todos' | 'ninguno' | 'mitad';
+
 export type Settings = {
+  /** Clave dentro de `categorias`. Se ignora si hay `custom`. */
   category: string;
+  /** Categoría inventada por el anfitrión. Viaja entera con el estado. */
+  custom: CategoryWords | null;
   numImpostors: number;
+  orderMode: OrderMode;
+  /** Deja que de vez en cuando salga una ronda torcida. Ver `rollVariant`. */
+  chaos: boolean;
 };
 
 export type Card = { id: string; name: string };
 
 export type GameData = {
   secretWord: string;
-  /** La clave dentro de `categorias`, no el nombre bonito. */
-  category: string;
+  /** Ya resuelto a nombre legible: puede venir de una categoría inventada. */
+  categoryName: string;
   impostors: Card[];
   /**
    * El orden de turnos, congelado al iniciar. Se guarda con nombre y no solo
@@ -79,6 +101,13 @@ export type GameData = {
    */
   order: Card[];
   readyIds: string[];
+  /**
+   * Solo en modo círculo: quién abre y hacia qué lado sigue. No es una lista
+   * porque la app no sabe cómo están sentados; eso lo resuelven mirándose.
+   */
+  start: { id: string; name: string; dir: Direction } | null;
+  /** Qué clase de ronda tocó. No se enseña hasta el final: ver `GameEnd`. */
+  variant: Variant;
 };
 
 export type RoomState = {
@@ -88,14 +117,22 @@ export type RoomState = {
   game: GameData | null;
   /** Sube con cada cambio; sirve para descartar estados que llegan tarde. */
   v: number;
+  /** Para no encadenar dos rondas caóticas seguidas. Ver `rollVariant`. */
+  lastWasChaos: boolean;
 };
 
 export const MIN_PLAYERS = 3;
 
 export const DEFAULT_SETTINGS: Settings = {
   category: 'comida',
+  custom: null,
   numImpostors: 1,
+  orderMode: 'lista',
+  chaos: false,
 };
+
+/** Cada cuánto, más o menos, el modo caos tuerce una ronda. */
+export const CHAOS_CHANCE = 0.15;
 
 /** Nunca todos impostores: tiene que quedar alguien que sepa la palabra. */
 export const maxImpostorsFor = (playerCount: number) =>
@@ -112,12 +149,23 @@ export function sanitizeSettings(
   return {
     category:
       typeof merged.category === 'string' && merged.category ? merged.category : base.category,
+    // Puede llegar de otro jugador, así que se recorta antes de guardarla.
+    custom: sanitizeCategoryWords(merged.custom),
     numImpostors: Math.min(Math.max(Math.round(impostors), 1), maxImpostorsFor(playerCount)),
+    orderMode: merged.orderMode === 'circulo' ? 'circulo' : 'lista',
+    chaos: Boolean(merged.chaos),
   };
 }
 
 export function newRoomState(code: string): RoomState {
-  return { code: normalizeCode(code), phase: 'lobby', settings: { ...DEFAULT_SETTINGS }, game: null, v: 0 };
+  return {
+    code: normalizeCode(code),
+    phase: 'lobby',
+    settings: { ...DEFAULT_SETTINGS },
+    game: null,
+    v: 0,
+    lastWasChaos: false,
+  };
 }
 
 /* ── Canal y eventos ───────────────────────────────────────────────────── */
@@ -164,7 +212,7 @@ export function resolveHostId(players: Player[]): string | null {
 /* ── Reparto de roles ──────────────────────────────────────────────────── */
 
 /** Fisher-Yates. El `sort(() => Math.random() - 0.5)` de antes no baraja parejo. */
-function shuffle<T>(items: T[]): T[] {
+export function shuffle<T>(items: T[]): T[] {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -173,20 +221,91 @@ function shuffle<T>(items: T[]): T[] {
   return out;
 }
 
-export function pickImpostors(players: Player[], numImpostors: number): Card[] {
-  const wanted = Math.max(1, Math.min(numImpostors, Math.max(1, players.length - 1)));
+/**
+ * Reparte las cartas de impostor.
+ *
+ * En una ronda normal siempre queda al menos alguien que sabe la palabra: sin
+ * eso no hay a quién engañar. `allowEveryone` levanta ese suelo, y es lo único
+ * que necesita la ronda caótica en la que todos resultan ser impostores.
+ */
+export function pickImpostors(
+  players: Player[],
+  numImpostors: number,
+  allowEveryone = false,
+): Card[] {
+  const cap = allowEveryone ? players.length : Math.max(1, players.length - 1);
+  const wanted = Math.max(0, Math.min(Math.round(numImpostors), cap));
   return shuffle(players)
     .slice(0, wanted)
     .map((p) => ({ id: p.id, name: p.name }));
 }
 
-export function buildGame(players: Player[], settings: Settings, words: string[]): GameData {
+/**
+ * Decide si esta ronda sale torcida, y de qué manera.
+ *
+ * La gracia está en que sea rara: si el modo caos saltara a menudo dejaría de
+ * sorprender y se volvería el juego normal. Por eso es poco probable y nunca
+ * cae dos veces seguidas — una ronda extraña se disfruta más si la anterior
+ * fue corriente.
+ */
+export function rollVariant(
+  playerCount: number,
+  settings: { chaos: boolean; numImpostors: number },
+  lastWasChaos: boolean,
+): Variant {
+  if (!settings.chaos || lastWasChaos) return 'normal';
+  if (Math.random() >= CHAOS_CHANCE) return 'normal';
+
+  const candidates: Variant[] = ['todos', 'ninguno'];
+  // Con pocos jugadores «la mitad» puede coincidir con lo que ya estaba
+  // configurado, y entonces no sorprende a nadie.
+  const half = Math.floor(playerCount / 2);
+  if (half >= 1 && half !== settings.numImpostors) candidates.push('mitad');
+
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+/** Cuántos impostores toca repartir según la torcedura de la ronda. */
+export function impostorsFor(
+  variant: Variant,
+  playerCount: number,
+  settings: { numImpostors: number },
+): number {
+  switch (variant) {
+    case 'todos':
+      return playerCount;
+    case 'ninguno':
+      return 0;
+    case 'mitad':
+      return Math.floor(playerCount / 2);
+    default:
+      return settings.numImpostors;
+  }
+}
+
+export function buildGame(
+  players: Player[],
+  settings: Settings,
+  category: CategoryWords,
+  variant: Variant = 'normal',
+): GameData {
+  const wanted = impostorsFor(variant, players.length, settings);
+  const order = shuffle(players).map((p) => ({ id: p.id, name: p.name }));
+
   return {
-    secretWord: words[Math.floor(Math.random() * words.length)],
-    category: settings.category,
-    impostors: pickImpostors(players, settings.numImpostors),
-    order: shuffle(players).map((p) => ({ id: p.id, name: p.name })),
+    secretWord: category.palabras[Math.floor(Math.random() * category.palabras.length)],
+    categoryName: category.nombre,
+    impostors: pickImpostors(players, wanted, variant === 'todos'),
+    order,
     readyIds: [],
+    start:
+      settings.orderMode === 'circulo'
+        ? {
+            ...order[Math.floor(Math.random() * order.length)],
+            dir: Math.random() < 0.5 ? 'horario' : 'antihorario',
+          }
+        : null,
+    variant,
   };
 }
 

@@ -1,4 +1,5 @@
-import { Medal, RotateCcw } from 'lucide-react';
+import { Medal, RotateCcw, Tornado } from 'lucide-react';
+import type { Variant } from '@/lib/room';
 
 interface Player {
   isImpostor: boolean;
@@ -8,16 +9,39 @@ interface Player {
 interface EndedStateProps {
   secretWord: string;
   players: Player[];
+  /** Qué clase de ronda fue. Es aquí, y solo aquí, donde se destapa. */
+  variant: Variant;
   onResetGame: () => void;
 }
+
+/*
+  Una ronda caótica no se anuncia al empezar: si se supiera, dejaría de
+  funcionar. Todas las cartas parecen normales hasta este momento.
+*/
+const CHAOS_COPY: Record<Exclude<Variant, 'normal'>, { titulo: string; detalle: string }> = {
+  todos: {
+    titulo: '¡TODOS ERAN IMPOSTORES!',
+    detalle: 'Nadie conocía la palabra. Estaban improvisando los unos para los otros.',
+  },
+  ninguno: {
+    titulo: 'NO HABÍA IMPOSTOR',
+    detalle: 'Todos conocían la palabra. Toda esa desconfianza fue de gratis.',
+  },
+  mitad: {
+    titulo: 'LA MITAD ERAN IMPOSTORES',
+    detalle: 'El doble de mentiras de lo que nadie esperaba.',
+  },
+};
 
 export default function EndedState({
   secretWord,
   players,
+  variant,
   onResetGame
 }: EndedStateProps) {
   const impostors = players.filter(p => p.isImpostor);
   const multipleImpostors = impostors.length > 1;
+  const chaos = variant === 'normal' ? null : CHAOS_COPY[variant];
 
   return (
     <div className="flex flex-col gap-5 flex-1">
@@ -28,6 +52,18 @@ export default function EndedState({
       </header>
 
       <main className="flex flex-col gap-4 flex-1">
+        {chaos && (
+          <div className="bg-fuchsia-950 border-4 border-fuchsia-500 p-4 rounded-none text-center">
+            <p className="flex items-center justify-center gap-2 text-fuchsia-300 font-vt323 text-lg uppercase tracking-widest">
+              <Tornado size={20} strokeWidth={3} />
+              Ronda caótica
+              <Tornado size={20} strokeWidth={3} />
+            </p>
+            <p className="text-white font-press-start text-base md:text-xl mt-2">{chaos.titulo}</p>
+            <p className="text-fuchsia-200 font-vt323 text-lg mt-2">{chaos.detalle}</p>
+          </div>
+        )}
+
         {/* Secret word */}
         <div className="bg-slate-900 border-4 border-cyan-800 p-5 rounded-none relative text-center">
           <div className="absolute top-1 left-1 w-2 h-2 bg-pink-600"></div>
@@ -44,21 +80,38 @@ export default function EndedState({
           <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-400"></div>
           <div className="absolute bottom-1 left-1 w-2 h-2 bg-cyan-400"></div>
           <div className="absolute bottom-1 right-1 w-2 h-2 bg-pink-600"></div>
-          <p className="text-cyan-400 font-vt323 text-xl uppercase tracking-widest mb-3">
-            {multipleImpostors ? `Los impostores eran (${impostors.length})` : 'El impostor era'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-            {impostors.map((p, i) => (
-              <span key={i} className="text-pink-500 font-press-start text-xl md:text-2xl drop-shadow-[2px_2px_0_#0f172a]">
-                {p.name}{i < impostors.length - 1 ? ' &' : ''}
+          {impostors.length === 0 ? (
+            <>
+              <p className="text-cyan-400 font-vt323 text-xl uppercase tracking-widest mb-3">
+                Y esta vez la sabían
+              </p>
+              <span className="text-pink-500 font-press-start text-xl md:text-2xl drop-shadow-[2px_2px_0_#0f172a]">
+                TODOS
               </span>
-            ))}
-          </div>
+            </>
+          ) : (
+            <>
+              <p className="text-cyan-400 font-vt323 text-xl uppercase tracking-widest mb-3">
+                {multipleImpostors ? `Los impostores eran (${impostors.length})` : 'El impostor era'}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+                {impostors.map((p, i) => (
+                  <span key={i} className="text-pink-500 font-press-start text-xl md:text-2xl drop-shadow-[2px_2px_0_#0f172a]">
+                    {p.name}{i < impostors.length - 1 ? ' &' : ''}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-slate-800 border-2 border-cyan-900 p-4 rounded-none text-center mt-2">
           <p className="text-lg font-vt323 text-slate-400 uppercase">
-            ¿Adivinaron {multipleImpostors ? 'a los impostores' : 'quién era el impostor'}? 🤔
+            {variant === 'ninguno'
+              ? '¿A cuántos inocentes acusaron? 😅'
+              : variant === 'todos'
+                ? '¿Alguien llegó a sospecharlo? 🤯'
+                : `¿Adivinaron ${multipleImpostors ? 'a los impostores' : 'quién era el impostor'}? 🤔`}
           </p>
         </div>
       </main>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { categorias } from '@/lib/data';
+import { resolveCategory } from '@/lib/categories';
 import {
   EV_HELLO,
   EV_INTENT,
@@ -21,6 +21,7 @@ import {
   readSessionFor,
   releaseTopic,
   resolveHostId,
+  rollVariant,
   sanitizeSettings,
   writeSession,
   type Intent,
@@ -30,8 +31,6 @@ import {
   type Session,
   type Settings,
 } from '@/lib/room';
-
-const cats = categorias as Record<string, { nombre: string; palabras: string[] }>;
 
 export type LinkStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
@@ -61,9 +60,18 @@ function reduce(state: RoomState, intent: Intent, players: Player[]): RoomState 
     case 'start': {
       if (state.phase !== 'lobby' || players.length < MIN_PLAYERS) return null;
       const settings = sanitizeSettings({}, state.settings, players.length);
-      const words = cats[settings.category]?.palabras;
-      if (!words?.length) return null;
-      return { ...state, phase: 'reveal', settings, game: buildGame(players, settings, words) };
+      // La categoría propia gana sobre la de fábrica, y viaja con el estado:
+      // los demás no necesitan tenerla guardada.
+      const category = resolveCategory(settings);
+      if (!category) return null;
+      const variant = rollVariant(players.length, settings, state.lastWasChaos);
+      return {
+        ...state,
+        phase: 'reveal',
+        settings,
+        lastWasChaos: variant !== 'normal',
+        game: buildGame(players, settings, category, variant),
+      };
     }
 
     case 'ready': {
@@ -589,7 +597,7 @@ export function useOnlineGame(rawCode: string) {
       isImpostor,
       // Al impostor no se le manda la palabra a la pantalla, ni siquiera oculta.
       secretWord: isImpostor ? null : room.game.secretWord,
-      categoryName: cats[room.game.category]?.nombre ?? room.game.category,
+      categoryName: room.game.categoryName,
     };
   }, [room?.game, session]);
 

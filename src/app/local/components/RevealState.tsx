@@ -163,7 +163,7 @@ export default function RevealState({
               {player.isImpostor && (
                 <div className="card-impostor-overlay">
                   <span className="card-word-label font-vt323 text-pink-400">La categoría es</span>
-                  <span className="card-word-value capitalize font-press-start text-white text-sm md:text-base mt-2">{gameData.config.selectedCategory}</span>
+                  <span className="card-word-value capitalize font-press-start text-white text-sm md:text-base mt-2">{gameData.game.categoryName}</span>
                   <span className="card-impostor-hint font-vt323 text-slate-300 text-sm mt-2">Adivina la palabra sin ser atrapado</span>
                 </div>
               )}

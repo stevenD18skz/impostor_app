@@ -1,3 +1,6 @@
+import type { CategoryWords } from '@/lib/categories';
+import type { Direction, OrderMode, Variant } from '@/lib/room';
+
 export interface Player {
   isImpostor: boolean;
   name: string;
@@ -8,14 +11,27 @@ export interface GameData {
   config: {
     numPlayers: number;
     numImpostors: number;
+    /** Clave dentro de `categorias`. Se ignora si hay `custom`. */
     selectedCategory: string;
+    /** Categoría inventada, guardada en este navegador. */
+    custom: CategoryWords | null;
+    orderMode: OrderMode;
+    chaos: boolean;
   };
   game: {
     players: Player[];
     playerNames: string[];
     secretWord: string;
+    /** El nombre legible de la categoría con la que se está jugando. */
+    categoryName: string;
     playingOrder: Player[];
     currentPlayer: number;
     showRole: boolean;
+    /** Solo en modo círculo: quién abre y hacia dónde sigue. */
+    start: { name: string; dir: Direction } | null;
+    /** Qué clase de ronda tocó. No se destapa hasta el final. */
+    variant: Variant;
   };
+  /** Para no encadenar dos rondas caóticas seguidas. */
+  lastWasChaos: boolean;
 }

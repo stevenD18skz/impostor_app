@@ -162,13 +162,19 @@ export default function RoomPage() {
       )}
 
       {phase === 'playing' && room.game && !isSpectator && (
-        <GameRunning order={room.game.order} onEndGame={endGame} />
+        <GameRunning
+          order={room.game.order}
+          start={room.game.start}
+          card={myCard}
+          onEndGame={endGame}
+        />
       )}
 
       {phase === 'ended' && room.game && (
         <GameEnd
           secretWord={room.game.secretWord}
           impostors={room.game.impostors}
+          variant={room.game.variant}
           onReset={resetGame}
           canReset={isHost}
         />
