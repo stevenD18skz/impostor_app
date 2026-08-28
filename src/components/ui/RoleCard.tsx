@@ -48,6 +48,9 @@ export default function RoleCard({
             src="/card_back.png"
             alt="Carta boca abajo"
             fill
+            // La carta mide min(260px, 68vw) y baja a min(220px, 64vw) en
+            // pantallas estrechas: nunca hace falta pedir el ancho completo.
+            sizes="(max-width: 400px) 70vw, 260px"
             className="card-image"
             priority
             draggable={false}
@@ -62,6 +65,9 @@ export default function RoleCard({
             src={isImpostor ? '/card_impostor.png' : '/card_innocent.png'}
             alt={isImpostor ? 'Impostor' : 'Inocente'}
             fill
+            // La carta mide min(260px, 68vw) y baja a min(220px, 64vw) en
+            // pantallas estrechas: nunca hace falta pedir el ancho completo.
+            sizes="(max-width: 400px) 70vw, 260px"
             className="card-image"
             priority
             draggable={false}
