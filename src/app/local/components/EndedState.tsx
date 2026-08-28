@@ -119,7 +119,7 @@ export default function EndedState({
       <footer className="pt-2">
         <button
           onClick={onResetGame}
-          className="group w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-900 border-4 border-cyan-700 text-cyan-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none"
+          className="group w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-900 border-4 border-cyan-700 text-cyan-400 font-press-start text-xs sm:text-sm hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:shadow-none transition-all duration-200 outline-none"
         >
           <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-800 group-hover:bg-cyan-400"></div>
           <RotateCcw size={20} strokeWidth={3} className="text-pink-500" />

@@ -110,7 +110,7 @@ function InviteButton({ code }: { code: string }) {
     <button
       onClick={invite}
       title={canShare ? 'Compartir el enlace de la sala' : 'Copiar el enlace de la sala'}
-      className={`flex items-center gap-2 px-5 py-3 bg-slate-900 border-4 font-press-start text-xs cursor-pointer hover:-translate-y-1 active:translate-y-0 active:shadow-none transition-all duration-200 ${borderTone}`}
+      className={`flex items-center gap-2 px-5 py-3 bg-slate-900 border-4 font-press-start text-xs cursor-pointer active:shadow-none transition-all duration-200 ${borderTone}`}
     >
       <Icon size={18} strokeWidth={3} />
       {label}
@@ -498,7 +498,7 @@ export default function Lobby({
         <button
           onClick={onLeaveRoom}
           disabled={leaving}
-          className="group relative flex flex-1 items-center justify-center gap-2 py-4 px-6 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 disabled:opacity-50 cursor-pointer"
+          className="group relative flex flex-1 items-center justify-center gap-2 py-4 px-6 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs sm:text-sm hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:shadow-none transition-all duration-200 disabled:opacity-50 cursor-pointer"
         >
           <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-cyan-800 group-hover:bg-cyan-400" />
           <LogOut size={18} strokeWidth={3} />
@@ -509,7 +509,7 @@ export default function Lobby({
           <button
             onClick={onStartGame}
             disabled={!canStart}
-            className="group relative flex flex-[2] items-center justify-center gap-2 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="group relative flex flex-[2] items-center justify-center gap-2 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:shadow-none transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-700 group-hover:bg-pink-400" />
             <Play size={18} strokeWidth={3} />

@@ -127,7 +127,7 @@ export default function GameEnd({
         {canReset ? (
           <button
             onClick={onReset}
-            className="group relative w-full flex items-center justify-center gap-3 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 outline-none cursor-pointer"
+            className="group relative w-full flex items-center justify-center gap-3 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:shadow-none transition-all duration-200 outline-none cursor-pointer"
           >
             <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-700 group-hover:bg-pink-400" />
             <RotateCcw size={20} strokeWidth={3} className="text-pink-400 group-hover:text-white" />

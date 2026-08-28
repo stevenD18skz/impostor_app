@@ -135,7 +135,7 @@ export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
               <button
                 onClick={joinRoom}
                 disabled={isBusy}
-                className="group relative flex items-center justify-center gap-2 py-3 px-5 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs hover:-translate-y-1 hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
+                className="group relative flex items-center justify-center gap-2 py-3 px-5 border-4 border-cyan-800 bg-slate-900 text-cyan-400 font-press-start text-xs hover:border-cyan-400 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(34,211,238,0.4)] active:shadow-none transition-all duration-200 disabled:opacity-50 disabled:hover:shadow-none cursor-pointer"
               >
                 <DoorOpen size={18} strokeWidth={3} />
                 {pending === 'join' ? '...' : 'ENTRAR'}
@@ -149,7 +149,7 @@ export default function GameSetup({ onCreate, onJoin }: GameSetupProps) {
             <button
               onClick={createRoom}
               disabled={isBusy}
-              className="group relative w-full flex items-center justify-center gap-2 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none cursor-pointer"
+              className="group relative w-full flex items-center justify-center gap-2 py-4 px-6 border-4 border-pink-700 bg-slate-900 text-pink-400 font-press-start text-xs sm:text-sm hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:shadow-none transition-all duration-200 disabled:opacity-50 disabled:hover:shadow-none cursor-pointer"
             >
               <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-pink-700 group-hover:bg-pink-400" />
               <PencilRuler size={18} strokeWidth={3} />

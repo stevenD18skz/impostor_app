@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Player, GameData } from '@/app/types/local';
-import Image from 'next/image';
+import RoleCard from '@/components/ui/RoleCard';
 import './styleLocal.css';
 
 interface RevealStateProps {
@@ -108,67 +108,15 @@ export default function RevealState({
         </div>
 
         {/* Carta 3D */}
-        <div
-          className={`card-scene-3d ${isPeeking ? 'peeking' : ''}`}
-          onMouseDown={startPeek}
-          onMouseUp={endPeek}
-          onMouseLeave={endPeek}
-          onTouchStart={startPeek}
-          onTouchEnd={endPeek}
-          onTouchCancel={endPeek}
-          style={{ cursor: 'pointer', touchAction: 'none' }}
-        >
-          <div className={`card-3d-inner ${isPeeking ? 'flipped' : ''}`}>
-
-            {/* Frente: dorso de la carta */}
-            <div className="card-3d-face card-3d-front">
-              <Image
-                src="/card_back.png"
-                alt="Carta boca abajo"
-                fill
-                className="card-image"
-                priority
-                draggable={false}
-              />
-              {/* Pulso visual cuando aún no se ha visto */}
-              {!hasRevealed && (
-                <div className="card-pulse-ring" />
-              )}
-            </div>
-
-            {/* Reverso: rol del jugador */}
-            <div className="card-3d-face card-3d-back">
-              <Image
-                src={player.isImpostor ? '/card_impostor.png' : '/card_innocent.png'}
-                alt={player.isImpostor ? 'Impostor' : 'Inocente'}
-                fill
-                className="card-image"
-                priority
-                draggable={false}
-              />
-
-              {/* Info overlay inocente */}
-              {!player.isImpostor && (
-                <div className="card-word-overlay">
-                  <span className="card-word-label font-vt323 text-cyan-400">Tu palabra secreta</span>
-                  <span className="card-word-value font-press-start text-white text-sm md:text-base mt-2 uppercase">{gameData.game.secretWord}</span>
-                </div>
-              )}
-
-              {/* Info overlay impostor */}
-              {player.isImpostor && (
-                <div className="card-impostor-overlay">
-                  <span className="card-word-label font-vt323 text-pink-400">La categoría es</span>
-                  <span className="card-word-value capitalize font-press-start text-white text-sm md:text-base mt-2">{gameData.game.categoryName}</span>
-                  <span className="card-impostor-hint font-vt323 text-slate-300 text-sm mt-2">Adivina la palabra sin ser atrapado</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sombra dinámica bajo la carta */}
-          <div className={`card-shadow ${isPeeking ? (player.isImpostor ? 'shadow-impostor' : 'shadow-innocent') : ''}`} />
-        </div>
+        <RoleCard
+          isImpostor={player.isImpostor}
+          secretWord={gameData.game.secretWord}
+          categoryName={gameData.game.categoryName}
+          isPeeking={isPeeking}
+          hasRevealed={hasRevealed}
+          onPeekStart={startPeek}
+          onPeekEnd={endPeek}
+        />
       </div>
 
       {/* Footer: botón siguiente, solo visible tras revelar */}

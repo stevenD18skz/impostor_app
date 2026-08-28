@@ -89,12 +89,10 @@ input[type="number"] {
 .number-input-btn:hover {
   background: #be185d;
   border-color: #831843;
-  transform: translateY(-2px);
   box-shadow: 0 4px 0 #831843;
 }
 
 .number-input-btn:active {
-  transform: translateY(2px);
   box-shadow: 0 0 0 transparent;
 }
 
@@ -230,149 +228,6 @@ input[type="number"] {
   color: rgba(168, 255, 168, 0.7) !important;
 }
 
-/* 3D flip card */
-.card-scene-3d {
-  perspective: 1000px;
-  width: min(260px, 68vw);
-  aspect-ratio: 5 / 7;
-  position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-  /* Subtle floating animation when idle */
-  animation: card-float 3s ease-in-out infinite;
-}
-
-.card-scene-3d.peeking {
-  animation: none;
-}
-
-@keyframes card-float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-6px); }
-}
-
-.card-3d-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
-}
-
-.card-3d-inner.flipped {
-  transform: rotateY(180deg);
-}
-
-.card-3d-face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  border-radius: 0;
-  overflow: hidden;
-  border: 4px solid #0f766e;
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.7);
-}
-
-.card-3d-back {
-  transform: rotateY(180deg);
-}
-
-.card-image {
-  object-fit: cover;
-  border-radius: 0;
-  pointer-events: none;
-  -webkit-touch-callout: none;
-}
-
-/* Pulse ring — shown before first reveal */
-.card-pulse-ring {
-  position: absolute;
-  inset: -8px;
-  border-radius: 0;
-  border: 4px solid #db2777;
-  animation: pulse-ring 1.8s ease-out infinite;
-  pointer-events: none;
-}
-
-@keyframes pulse-ring {
-  0%   { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.04); }
-}
-
-/* Word overlay for innocent */
-.card-word-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem 0.75rem 1.25rem;
-  background: rgba(15, 23, 42, 0.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  border-top: 4px solid #2dd4bf;
-}
-
-/* Impostor overlay */
-.card-impostor-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1rem 0.75rem 1.25rem;
-  background: rgba(15, 23, 42, 0.95);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  border-top: 4px solid #db2777;
-}
-
-.card-word-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(255,255,255,0.5);
-}
-
-.card-word-value {
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: #fff;
-}
-
-.card-impostor-hint {
-  font-size: 0.68rem;
-  color: rgba(255,255,255,0.4);
-  margin-top: 2px;
-  text-align: center;
-}
-
-/* Shadow under card : changes color on peek */
-.card-shadow {
-  position: absolute;
-  bottom: -16px;
-  left: 10%;
-  right: 10%;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.4);
-  filter: blur(10px);
-  transition: background 0.4s, opacity 0.4s;
-  pointer-events: none;
-}
-
-.card-shadow.shadow-innocent {
-  background: rgba(74, 222, 128, 0.35);
-}
-
-.card-shadow.shadow-impostor {
-  background: rgba(248, 113, 113, 0.35);
-}
 
 /* Footer button — slides in after reveal */
 .reveal-footer {
@@ -413,12 +268,10 @@ input[type="number"] {
   background: #1e293b;
   border-color: #2dd4bf;
   color: white;
-  transform: translateY(-2px);
   box-shadow: 0 4px 0 #0f172a, 0 4px 10px rgba(45,212,191,0.4);
 }
 
 .reveal-next-btn:active {
-  transform: translateY(2px);
   box-shadow: none;
 }
 
@@ -432,10 +285,6 @@ input[type="number"] {
     height: 42px;
     border-radius: 10px;
     font-size: 1.25rem;
-  }
-
-  .card-scene-3d {
-    width: min(220px, 64vw);
   }
 
   .reveal-player-name {

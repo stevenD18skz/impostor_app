@@ -101,7 +101,7 @@ export function ArcadeButton({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`group relative flex items-center justify-center gap-2 py-4 px-4 bg-slate-900 border-4 font-press-start text-xs sm:text-sm transition-all duration-200 outline-none cursor-pointer hover:-translate-y-1 active:translate-y-0 active:shadow-none disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none disabled:hover:text-inherit ${TONES[tone]} ${className}`}
+      className={`group relative flex items-center justify-center gap-2 py-4 px-4 bg-slate-900 border-4 font-press-start text-xs sm:text-sm transition-all duration-200 outline-none cursor-pointer active:shadow-none disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:text-inherit ${TONES[tone]} ${className}`}
     >
       <span className={`absolute top-1 right-1 w-1.5 h-1.5 ${CORNER[tone]}`} />
       {Icon && <Icon size={18} strokeWidth={3} className="shrink-0" />}

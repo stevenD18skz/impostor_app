@@ -211,7 +211,7 @@ export default function PlayingState({ gameData, onEndGame }: PlayingStateProps)
         <div className="flex gap-3 font-press-start text-xs sm:text-sm">
           <button
             onClick={onEndGame}
-            className="group flex flex-1 items-center justify-center gap-2 py-4 px-4 bg-slate-900 border-4 border-pink-700 text-pink-400 transition-all hover:-translate-y-1 hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-none"
+            className="group flex flex-1 items-center justify-center gap-2 py-4 px-4 bg-slate-900 border-4 border-pink-700 text-pink-400 transition-all hover:border-pink-500 hover:text-white hover:shadow-[0_4px_0_#0f172a,0_4px_10px_rgba(236,72,153,0.4)] active:shadow-none"
           >
             <Crown size={18} strokeWidth={3} />
             TERMINAR

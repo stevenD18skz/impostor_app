@@ -72,7 +72,7 @@ export default function MainMenu({ onLocalPlay, onOnlinePlay }: MainMenuProps) {
         </div>
         
         {/* Title / Logo */}
-        <div className="mb-12 mt-4 transform transition-transform hover:-translate-y-2 duration-200">
+        <div className="mb-12 mt-4">
           <div className="relative">
             <h1 className="text-pink-600 text-4xl md:text-5xl font-press-start text-center drop-shadow-[4px_4px_0_rgba(15,23,42,1)]" style={{ WebkitTextStroke: '1px #4ae1de' }}>
               IMPOSTOR
@@ -88,7 +88,7 @@ export default function MainMenu({ onLocalPlay, onOnlinePlay }: MainMenuProps) {
           {/* Local Card */}
           <button 
             onClick={onLocalPlay}
-            className="group relative flex-1 bg-slate-900 border-4 border-cyan-700 p-6 text-white text-3xl transition-all duration-200 hover:-translate-y-2 hover:border-cyan-400 hover:shadow-[0_10px_0_#0f172a,0_10px_20px_rgba(34,211,238,0.4)] active:translate-y-0 active:shadow-[0_2px_0_#0f172a] outline-none focus:border-pink-500"
+            className="group relative flex-1 bg-slate-900 border-4 border-cyan-700 p-6 text-white text-3xl transition-all duration-200 hover:border-cyan-400 hover:shadow-[0_10px_0_#0f172a,0_10px_20px_rgba(34,211,238,0.4)] active:shadow-[0_2px_0_#0f172a] outline-none focus:border-pink-500"
           >
             <div className="absolute top-1 right-1 w-2 h-2 bg-cyan-500 opacity-50 group-hover:opacity-100 group-hover:bg-pink-500"></div>
             <span className="font-press-start text-lg block mb-2 text-cyan-300 group-hover:text-white transition-colors">LOCAL</span>
@@ -98,7 +98,7 @@ export default function MainMenu({ onLocalPlay, onOnlinePlay }: MainMenuProps) {
           {/* Online Card */}
           <button 
             onClick={onOnlinePlay}
-            className="group relative flex-1 bg-slate-900 border-4 border-pink-700 p-6 text-white text-3xl transition-all duration-200 hover:-translate-y-2 hover:border-pink-500 hover:shadow-[0_10px_0_#0f172a,0_10px_20px_rgba(236,72,153,0.4)] active:translate-y-0 active:shadow-[0_2px_0_#0f172a] outline-none focus:border-cyan-400"
+            className="group relative flex-1 bg-slate-900 border-4 border-pink-700 p-6 text-white text-3xl transition-all duration-200 hover:border-pink-500 hover:shadow-[0_10px_0_#0f172a,0_10px_20px_rgba(236,72,153,0.4)] active:shadow-[0_2px_0_#0f172a] outline-none focus:border-cyan-400"
           >
             <div className="absolute top-1 right-1 w-2 h-2 bg-pink-500 opacity-50 group-hover:opacity-100 group-hover:bg-cyan-400"></div>
             <span className="font-press-start text-lg block mb-2 text-pink-400 group-hover:text-white transition-colors">ONLINE</span>
@@ -119,7 +119,7 @@ export default function MainMenu({ onLocalPlay, onOnlinePlay }: MainMenuProps) {
         {/* Bottom Small Icons */}
         <div className="flex justify-center gap-6 mt-4">
           {[Megaphone, Settings, BarChart2, DollarSign].map((Icon, idx) => (
-            <button key={idx} className="bg-slate-900 border-2 border-cyan-800 p-3 hover:bg-slate-700 hover:border-cyan-400 hover:-translate-y-1 transition-all text-cyan-500 hover:text-white active:translate-y-0">
+            <button key={idx} className="bg-slate-900 border-2 border-cyan-800 p-3 hover:bg-slate-700 hover:border-cyan-400 transition-all text-cyan-500 hover:text-white">
               <Icon size={24} strokeWidth={2.5} />
             </button>
           ))}
